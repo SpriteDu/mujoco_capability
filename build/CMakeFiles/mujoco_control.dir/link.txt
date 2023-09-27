@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/mujoco_control.dir/main_panda_RH8D.cpp.o  -o mujoco_control  -lmujoco -lglfw -lGL -lm libtools_and_panda_ik.a 

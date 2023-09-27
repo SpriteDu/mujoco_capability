@@ -1,0 +1,6 @@
+<mujocoinclude>
+    <body name="Table" pos="-1.0 -0.95 0" euler="0 0 0">
+        <inertial mass="23.73" pos = "0.45 0.95 0.4854" diaginertia="8.64 2.05 10.28"/>
+        <geom pos="0 0 0" type="mesh" material="white" mesh="Table"/>        
+    </body>
+</mujocoinclude>

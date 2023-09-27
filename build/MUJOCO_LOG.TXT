@@ -1,0 +1,6 @@
+Wed Sep 27 18:42:10 2023
+WARNING: mju_openResource: unknown file '/home/diegoubuntu/Documents/Ab_2022/Simulation/mujoco-2.3.7/Projects/panda_rhand_seedRH8D_r/franka_panda_RH8D_R.xml'
+
+Wed Sep 27 18:42:10 2023
+ERROR: Load model error: mjParseXML: could not open file '/home/diegoubuntu/Documents/Ab_2022/Simulation/mujoco-2.3.7/Projects/panda_rhand_seedRH8D_r/franka_panda_RH8D_R.xml'
+

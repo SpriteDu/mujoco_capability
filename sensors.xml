@@ -1,0 +1,16 @@
+<mujocoinclude>
+
+<sensor>
+      <framepos objtype="site" objname="tip_thumb"/>
+      <framelinvel objtype="site" objname="tip_thumb"/>
+      <framepos objtype="site" objname="tip_index"/>
+      <framelinvel objtype="site" objname="tip_index"/>
+      <framepos objtype="site" objname="tip_middle"/>
+      <framelinvel objtype="site" objname="tip_middle"/>
+      <framepos objtype="site" objname="tip_ring"/>
+      <framelinvel objtype="site" objname="tip_ring"/>
+      <framepos objtype="site" objname="tip_small"/>
+      <framelinvel objtype="site" objname="tip_small"/>    
+</sensor>  
+  
+</mujocoinclude>

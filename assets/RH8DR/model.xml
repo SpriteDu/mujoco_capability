@@ -1,0 +1,113 @@
+﻿<mujoco model="RH8DR">
+  <compiler angle="radian" autolimits="true"/>
+  <size/>
+  <default/>
+  <asset>
+    <mesh name="base" file="base.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="forearm" file="forearm.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="palm axis" file="palm axis.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="palm assembly" file="palm assembly.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="phalanx" file="phalanx.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="tip" file="tip.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="thumb base" file="thumb base.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="thumb_phalanx" file="thumb_phalanx.stl" scale="0.001 0.001 0.001"/>
+  </asset>
+  <worldbody>
+    <geom pos="0 0 0.0045" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="base"/>
+    <body name="forearm:1" pos="0 0 0.001" quat="0 0 -0.707107 0.707107">
+      <inertial pos="1.87963e-07 -0.0656522 -0.00271352" quat="0.498346 0.501671 -0.501575 0.498397" mass="0.740385" diaginertia="0.00146215 0.00130925 0.000680264"/>
+      <joint name="forearm:1--base:1" pos="0 0 0" axis="0 -1 0" range="-1.5708 1.5708" damping="0.1"/>
+      <geom type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="forearm"/>
+      <body name="palm_axis:1" pos="0 -0.165 -0.01275">
+        <inertial pos="0 0.008585 0.0125" quat="0 0.707107 0 0.707107" mass="0.0509809" diaginertia="1.88432e-05 1.37535e-05 9.79681e-06"/>
+        <joint name="palm_axis:1--forearm:1" pos="0 0 0" axis="0 0 1" range="-0.785398 0.785398" damping="0.1"/>
+        <geom pos="0 0 0.0125" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="palm axis"/>
+        <body name="palm" pos="0.0265 0 0.0125" quat="0.764847 0.63682 0.022682 -0.094633">
+          <inertial pos="-0.0428433 -0.00466111 0.0454719" quat="0.48276 0.542533 0.210306 0.654502" mass="0.0820994" diaginertia="9.95214e-05 8.17343e-05 3.63353e-05"/>
+          <joint name="palm--palm_axis:1" pos="0 0 0" axis="-0.98106 -0.173648 0.0858319" range="-0.785398 0.785398" damping="0.1"/>
+          <geom pos="-0.0586362 -0.00572413 0.0653212" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="palm assembly"/>
+          <body name="Index_Proximal" pos="-0.0482113 -0.0207166 0.0857786" quat="0 1 0 0">
+            <inertial pos="-0.00506278 -0.000180346 -0.0109169" quat="0.709609 0.0289913 -0.0286909 0.703414" mass="0.00525864" diaginertia="5.65636e-07 5.33996e-07 1.82249e-07"/>
+            <joint name="Index_Proximal--palm" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
+            <geom pos="-0.00506263 -1.44878e-07 -0.0129367" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="phalanx"/>
+            <body name="Index_Middle" pos="6.24645e-05 0 -0.0258748">
+              <inertial pos="-0.00506279 -0.000180375 -0.0109169" quat="0.709609 0.0289913 -0.0286909 0.703414" mass="0.00525864" diaginertia="5.65636e-07 5.33996e-07 1.82249e-07"/>
+              <joint name="Index_Middle--Index_Proximal" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
+              <geom pos="-0.00506242 0 -0.0129376" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="phalanx"/>
+              <body name="Index_Distal" pos="6.2463e-05 0 -0.0258748">
+                <inertial pos="-0.00452224 -0.00262003 -0.0121245" quat="0.634633 -0.0915234 0.0968285 0.761242" mass="0.00650951" diaginertia="5.45458e-07 5.01126e-07 3.14326e-07"/>
+                <joint name="Index_Distal--Index_Middle" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
+                <geom pos="-0.00506253 0 4.01497e-07" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="tip"/>
+              </body>
+            </body>
+          </body>
+          <body name="Small_Proximal" pos="0.0235505 -0.00577399 0.0699045" quat="-0.00757449 -0.976383 -0.173483 0.128543">
+            <inertial pos="-0.00506278 -0.00018031 -0.0109171" quat="0.709609 0.0289913 -0.0286909 0.703414" mass="0.00525864" diaginertia="5.65636e-07 5.33996e-07 1.82249e-07"/>
+            <joint name="Small_Proximal--palm" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
+            <geom pos="-0.00506256 0 -0.0129378" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="phalanx"/>
+            <body name="Small_Middle" pos="6.24423e-05 0 -0.0258752">
+              <inertial pos="-0.00506278 -0.00018031 -0.0109171" quat="0.709609 0.0289913 -0.0286909 0.703414" mass="0.00525864" diaginertia="5.65636e-07 5.33996e-07 1.82249e-07"/>
+              <joint name="Small_Middle--Small_Proximal" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
+              <geom pos="-0.00506255 0 -0.0129378" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="phalanx"/>
+              <body name="Small_Distal" pos="6.2445e-05 0 -0.0258753">
+                <inertial pos="-0.00452232 -0.00262 -0.0121245" quat="0.634633 -0.0915234 0.0968285 0.761242" mass="0.00650951" diaginertia="5.45458e-07 5.01126e-07 3.14326e-07"/>
+                <joint name="Small_Distal--Small_Middle" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
+                <geom pos="-0.00506244 0 0" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="tip"/>
+              </body>
+            </body>
+          </body>
+          <body name="Ring_Proximal" pos="0.000973217 -0.0139442 0.0805959" quat="-7.86943e-05 -0.987791 -0.129626 0.0864102">
+            <inertial pos="-0.00506284 -0.000180314 -0.0109171" quat="0.709609 0.0289913 -0.0286909 0.703414" mass="0.00525864" diaginertia="5.65636e-07 5.33996e-07 1.82249e-07"/>
+            <joint name="Ring_Proximal--palm" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
+            <geom pos="-0.00506248 0 -0.0129378" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="phalanx"/>
+            <body name="Ring_Middle" pos="6.24428e-05 0 -0.0258755">
+              <inertial pos="-0.00506274 -0.000180305 -0.0109171" quat="0.709609 0.0289913 -0.0286909 0.703414" mass="0.00525864" diaginertia="5.65636e-07 5.33996e-07 1.82249e-07"/>
+              <joint name="Ring_Middle--Ring_Proximal" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
+              <geom pos="-0.00506238 -1.10193e-07 -0.0129369" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="phalanx"/>
+              <body name="Ring_Distal" pos="6.25413e-05 0 -0.0258745">
+                <inertial pos="-0.00452232 -0.00261989 -0.0121254" quat="0.634633 -0.0915234 0.0968285 0.761242" mass="0.00650951" diaginertia="5.45458e-07 5.01126e-07 3.14326e-07"/>
+                <joint name="Ring_Distal--Ring_Middle" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
+                <geom pos="-0.00506254 1.36101e-07 -7.35729e-07" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="tip"/>
+              </body>
+            </body>
+          </body>
+          <body name="Thumb_axis" pos="-0.0403593 -0.0128548 0.0384218" quat="0.488081 0.532913 -0.239627 -0.648352">
+            <inertial pos="7.36614e-07 -0.0127284 0.0077996" quat="0.90682 0.421512 -0.00114761 0.00208364" mass="0.00876232" diaginertia="7.9766e-07 7.76944e-07 4.56571e-07"/>
+            <joint name="Thumb_axis--palm" pos="0 0 0" axis="0 -0.866025 0.5" range="0 1.5708" damping="0.1"/>
+            <geom pos="-2.0491e-07 -0.0143541 0.0211785" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="thumb base"/>
+            <body name="Thumb_Methacarpal" pos="-0.00512514 -0.0143543 0.0211784" quat="0 -1 0 0">
+              <inertial pos="0.00506187 -0.00020374 -0.0087338" quat="0.707662 0.0382635 -0.0379957 0.70449" mass="0.00441372" diaginertia="4.34031e-07 4.06754e-07 1.50155e-07"/>
+              <joint name="Thumb_Methacarpal--Thumb_axis" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
+              <geom pos="0.00506254 1.23613e-07 -0.010793" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="thumb_phalanx"/>
+              <body name="Thumb_Proximal" pos="-0.000562562 -2.35897e-07 -0.0215861">
+                <inertial pos="0.00506186 -0.000203737 -0.0087338" quat="0.707662 0.0382635 -0.0379957 0.70449" mass="0.00441372" diaginertia="4.34031e-07 4.06754e-07 1.50155e-07"/>
+                <joint name="Thumb_Proximal--Thumb_Methacarpal" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
+                <geom pos="0.00506253 1.26601e-07 -0.010793" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="thumb_phalanx"/>
+                <body name="Thumb_Distal" pos="-6.23674e-05 6.16563e-07 -0.0215858">
+                  <inertial pos="0.00560256 -0.00262057 -0.0121248" quat="0.634633 -0.0915234 0.0968285 0.761242" mass="0.00650951" diaginertia="5.45458e-07 5.01126e-07 3.14326e-07"/>
+                  <joint name="Thumb_Distal--Thumb_Proximal" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
+                  <geom pos="0.00506251 -1.31623e-07 0" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="tip"/>
+                </body>
+              </body>
+            </body>
+          </body>
+          <body name="Middle_Proximal" pos="-0.0230982 -0.0192207 0.084179" quat="0.00190282 -0.998097 -0.0435779 0.043578">
+            <inertial pos="-0.00506279 -0.000180392 -0.0109167" quat="0.709609 0.0289913 -0.0286909 0.703414" mass="0.00525864" diaginertia="5.65636e-07 5.33996e-07 1.82249e-07"/>
+            <joint name="Middle_Proximal--palm" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
+            <geom pos="-0.00506247 0 -0.0129372" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="phalanx"/>
+            <body name="Middle_Middle" pos="6.24843e-05 -1.52847e-07 -0.0258742">
+              <inertial pos="-0.00506283 -0.000180213 -0.0109177" quat="0.709609 0.0289913 -0.0286909 0.703414" mass="0.00525864" diaginertia="5.65636e-07 5.33996e-07 1.82249e-07"/>
+              <joint name="Middle_Middle--Middle_Proximal" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
+              <geom pos="-0.00506251 1.09878e-07 -0.0129382" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="phalanx"/>
+              <body name="Middle_Distal" pos="6.24995e-05 0 -0.0258752">
+                <inertial pos="-0.00452227 -0.00261993 -0.0121249" quat="0.634633 -0.0915234 0.0968285 0.761242" mass="0.00650951" diaginertia="5.45458e-07 5.01126e-07 3.14326e-07"/>
+                <joint name="Middle_Distal--Middle_Middle" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
+                <geom pos="-0.00506248 0 -6.09795e-07" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="tip"/>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>
