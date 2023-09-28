@@ -62,6 +62,7 @@
     <material class="panda" name="black" rgba="0.25 0.25 0.25 1"/>
     <material class="panda" name="green" rgba="0 1 0 1"/>
     <material class="panda" name="light_blue" rgba="0.039216 0.541176 0.780392 1"/>
+    <material name="brown" rgba="0.52 0.34 0.13 1"/>
 
     <!-- Collision meshes -->
     <mesh name="link0_c" file="panda/link0.stl"/>
@@ -148,6 +149,7 @@
 
   <asset>
     <mesh name="Table" file="Manipulation_scene/Table.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="Multi_shaped_object" file="Manipulation_scene/Multi_shaped_object.stl" scale="0.001 0.001 0.001"/>
   </asset>
 
   <default>

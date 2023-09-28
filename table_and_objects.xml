@@ -2,5 +2,9 @@
     <body name="Table" pos="-1.0 -0.95 0" euler="0 0 0">
         <inertial mass="23.73" pos = "0.45 0.95 0.4854" diaginertia="8.64 2.05 10.28"/>
         <geom pos="0 0 0" type="mesh" material="white" mesh="Table"/>        
+        <body name="Multi_shaped_object" pos="0.45 0.95 0.5254" euler="0 0 0">
+            <inertial mass="0.89544" pos = "0.06 0.04 0.11" diaginertia="0.01 0.01 0.00"/>
+            <geom pos="0 0 0" type="mesh" material="brown" mesh="Multi_shaped_object"/>
+        </body>
     </body>
 </mujocoinclude>
