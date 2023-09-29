@@ -6,19 +6,21 @@
 
 using namespace std;
 
-void Log(const char* text)
-{
+void Log(const char* text){
     cout << text << endl;
 }
 
-void Log(int var)
-{
+void Log(int var){
     cout << var << endl;
 }
 
-void Log(double var)
-{
+void Log(double var){
     cout << var << endl;
+}
+
+void Log(std::array<double, 7> q){
+    for (auto i = 0; i < 7; i++)
+        std::cout << q[i] << ", " << std::endl;
 }
 
 double random_generator(){
@@ -67,7 +69,7 @@ void Ik_solution::get_Solution(){
         if ((cnt[0]+cnt[1]+cnt[2]+cnt[3]) == 4)
             std::cout << "No solution satisfies the requested EE frame \n";
         else{
-            auto sol = Ik_solution::get_closest_sol(dist, 4);
+            auto sol = Ik_solution::get_closest_sol(dist, cnt, 4);
             for (auto i = 0; i < 7; i++)
                 q_sol[i] = q_out[sol][i];
         }
@@ -84,11 +86,11 @@ void Ik_solution::print_sol(){
     std::cout << "\n";
 }
 
-int Ik_solution::get_closest_sol(double* dist, int n_sol){
+int Ik_solution::get_closest_sol(double* dist, int* cnt, int n_sol){
     double min_val = 1000;
     int min;
     for (auto i = 0; i < n_sol ; i++)
-        if (dist[i] < min_val && dist[i] != 0){
+        if (dist[i] < min_val && cnt[i] != 1){
             min_val = dist[i];
             min = i;
         }

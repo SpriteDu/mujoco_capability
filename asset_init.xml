@@ -1,7 +1,11 @@
 <mujocoinclude>
     <compiler angle="radian" meshdir="assets" autolimits="true"/>
     <option integrator="implicitfast"/>
-    <option timestep="0.001"/>
+    <option timestep="0.0001"/>
+
+    <option>
+      <flag multiccd="enable"/>
+    </option>
 
     <default>
       <default class="panda">

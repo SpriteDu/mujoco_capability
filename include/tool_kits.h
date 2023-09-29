@@ -8,6 +8,8 @@ void Log(double var);
 
 double random_generator();
 
+void Log(std::array<double, 7> q);
+
 class Ik_solution{
     public:
         std::array<double, 16> O_T_EE = {0};
@@ -24,5 +26,5 @@ class Ik_solution{
         void get_Solution();
         void print_sol();        
 
-    static int get_closest_sol(double* dist, int n_sol);
+    static int get_closest_sol(double* dist, int* cnt, int n_sol);
 };

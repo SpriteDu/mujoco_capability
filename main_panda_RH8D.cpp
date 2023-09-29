@@ -140,7 +140,7 @@ void controlLaw(const mjModel* m, mjData* d)
 void controlSystem(const mjModel* m, mjData* d, double ref[])
 {
     int n_joints = m->nq;
-    float kp = 0.0025f;
+    float kp = 0.005f;
     double err = 0.0;
     for(int i = 0; i < n_joints; i++)
     {
@@ -238,44 +238,28 @@ int main(int argc, const char** argv)
     d->qpos[6] = 0;*/
 
 
-
-
- ////////////////////////////////////////////////////////////////////////////////////////
-
+    ////////////////////////////////////////////////////////////////////////////////////////////
     double q7 = 0.707;
     std::array<double, 16> O_T_EE_array;
     std::array<double, 7> q_actual_array = {0};
     for (auto i = 0; i < 7; i++)
         q_actual_array[i] = d->qpos[i];
 
-    O_T_EE_array[0] = 0;
-    O_T_EE_array[1] = 1;
-    O_T_EE_array[2] = 0;
-    O_T_EE_array[3] = 0;
-    O_T_EE_array[4] = 1;
-    O_T_EE_array[5] = 0;
-    O_T_EE_array[6] = 0;
-    O_T_EE_array[7] = 0;
-    O_T_EE_array[8] = 0;
-    O_T_EE_array[9] = 0;
-    O_T_EE_array[10] = -1;
-    O_T_EE_array[11] = 0;
-    O_T_EE_array[12] = 0.35;
-    O_T_EE_array[13] = 0.35;
-    O_T_EE_array[14] = 0.20;
-    O_T_EE_array[15] = 1;
+    O_T_EE_array[0] = 0; O_T_EE_array[4] = 0; O_T_EE_array[8] = -1;    O_T_EE_array[12] = -0.2;
+    O_T_EE_array[1] = 1; O_T_EE_array[5] = 0; O_T_EE_array[9] = 0;    O_T_EE_array[13] = 0.05;
+    O_T_EE_array[2] = 0; O_T_EE_array[6] = -1; O_T_EE_array[10] = 0;  O_T_EE_array[14] = 0.50;
+    O_T_EE_array[3] = 0; O_T_EE_array[7] = 0; O_T_EE_array[11] = 0;   O_T_EE_array[15] = 1;       
 
     Ik_solution ik_sol;
     ik_sol.define_sol_par(O_T_EE_array, q_actual_array, q7);
     ik_sol.get_Solution();
     ik_sol.print_sol();
-
-    ////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////
 
 
     int ncon = d->ncon; // Number of contacts
 
-    double ref[n_joints] = {-1.42172, -1.18835, 0.977646, -2.34855, 0.884779, 1.46295, 0,
+    double ref[n_joints] = {-1.42172, -1.18835, 0.977646, -2.34855, 0.884779, 1.46295, 0, // Panda joints
             0, // Forearm --> Should be kept in 0 as it is not actuated
             0, // Wrist adduction/abduction
             0.50, // Wrist Flexion/Extension
@@ -321,9 +305,6 @@ int main(int argc, const char** argv)
     double start_time = glfwGetTime();
     while( !glfwWindowShouldClose(window) )
     {        
-
-
-
         double current_time = glfwGetTime();
         double elapsed_time = current_time - start_time;
 
@@ -347,11 +328,11 @@ int main(int argc, const char** argv)
             std::this_thread::sleep_for(std::chrono::duration<double>(sleep_time));
         }
 
-        ncon = d->ncon; // Number of contacts
+        /*ncon = d->ncon; // Number of contacts
         std::cout << ncon << "/ " << d->contact[0].pos[0] << "/ " << d->contact[0].pos[1] << "/ " << d->contact[0].pos[2] <<
                              "/ " << d->contact[0].frame[0] << "/ " << d->contact[0].frame[1] << "/ " << d->contact[0].frame[2] <<
                              "/ " << d->contact[0].mu << "/ " << d->contact[0].geom1 <<  "/ " << d->contact[0].geom2
-                << std::endl;
+                << std::endl;*/
 
 
         // advance interactive simulation for 1/60 sec
