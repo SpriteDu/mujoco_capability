@@ -37,8 +37,20 @@
           </default>
         </default>
       </default>
+<!-- define the geom for table parts -->
+      <default class="desktop">
+        <geom group = "3" type="box" size="0.45 0.95 0.013"/>
+      </default>
+      <default class="leg">
+        <geom group = "3"  type="box" size="0.025 0.025 0.25"/>
+      </default>
     </default>
 
+   
+
+    
+
+    
     <size njmax="500" nconmax="100" />
 
   <asset>

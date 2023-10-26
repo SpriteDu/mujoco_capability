@@ -30,7 +30,7 @@ bool button_right =  false;
 double lastx = 0;
 double lasty = 0;
 
-char filename[] = "/home/diegoubuntu/Documents/Ab_2022/Simulation/mujoco-2.3.7/Projects/panda_rhand_RH8D_Cmake/franka_panda_RH8D_R.xml";
+char filename[] = "/home/jididu/Documents/mujoco-2.3.7/Project/mujoco-capability/franka_panda_RH8D_R.xml";
 
 // keyboard callback
 void keyboard(GLFWwindow* window, int key, int scancode, int act, int mods)

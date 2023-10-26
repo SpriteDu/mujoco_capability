@@ -1,7 +1,32 @@
 <mujocoinclude>
+ <!-- <default>
+    <default class = "desktop">
+        <geom size = "0.9 1.9 0.025"/>
+    </default>
+ <default> -->
+
+  <!-- <default>
+    <default class="collision">
+      <geom type="box" group="3"/>
+
+      <default class="handle">
+        <geom size="0.0025 0.00328 0.0055"/>
+      </default>
+    </default>
+  </default> -->
+
+
+
     <body name="Table" pos="-1.0 -0.95 0" euler="0 0 0">        
         <joint type = "free"/>        
         <inertial mass="23.73" pos = "0.45 0.95 0.4854" diaginertia="8.64 2.05 10.28"/>
-        <geom pos="0 0 0" type="mesh" material="white" mesh="Table"/>                        
+        <geom pos="0 0 0" type="mesh" material="white" mesh="Table"  contype="0" conaffinity="0"/>   
+        <!-- set the collision mesh from convex mesh to none -->
+        <!-- set the collision separately  -->
+        <geom class ="desktop" pos = "0.45 0.95 0.511"    euler = "0 0 0"/>        
+        <geom class ="leg" pos = "0.035 1.875 0.250"    euler = "0 0 0"/> 
+        <geom class ="leg" pos = "0.865 1.865 0.250"    euler = "0 0 0"/> 
+        <geom class ="leg" pos = "0.035 0.035 0.250"    euler = "0 0 0"/> 
+        <geom class ="leg" pos = "0.865 0.035 0.250"    euler = "0 0 0"/>        
     </body>
 </mujocoinclude>
