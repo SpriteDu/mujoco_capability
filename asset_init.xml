@@ -1,7 +1,7 @@
 <mujocoinclude>
     <compiler angle="radian" meshdir="assets" autolimits="true"/>
-    <option integrator="implicitfast"/>
-    <option timestep="0.0001"/>
+    <option integrator="implicit"/>
+    <option timestep="0.00015"/>
 
     <option>
       <flag multiccd="enable"/>

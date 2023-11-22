@@ -96,26 +96,101 @@ void scroll(GLFWwindow* window, double xoffset, double yoffset)
     mjv_moveCamera(m, mjMOUSE_ZOOM, 0, -0.05*yoffset, &scn, &cam);
 }
 
-void controlSystem(const mjModel* m, mjData* d, double ref[])
+int controlSystem(const mjModel* m, mjData* d, double ref[], int stage)
 {
     int n_joints = m->nu;
     float kp = 0.013f;
     double err = 0.0;
-    for(int i = 0; i < n_joints; i++)
+    double threshold = 0.01;
+    int joint_at_position = 0;
+
+    switch (stage)
     {
-        err = ref[i] - d->qpos[i];
-        d->ctrl[i] = d->ctrl[i] + kp*(err);
+    case 0:{ // reach teh desired position 
+        d->ctrl[10] =1.5;
+        for(int i = 0; i < 9; i++) // the time of loop could affect the result 
+        {
+            
+            err = ref[i] - d->qpos[i];
+            d->ctrl[i] = d->ctrl[i] + kp*(err);
+            // std::cout<< err << "<=" <<threshold<< std::endl;
+            if(std::fabs(err) <= threshold){
+                joint_at_position++;
+                // std::cout<< "reached 1 " << std::endl;
+            }
+
+        }
+        for (int i = 11; i < n_joints; i++){
+            d->ctrl[i] = 0;
+        }
+        if ( joint_at_position ==7){
+                stage = 1;
+        }
+        // std::cout<< "not yet" << std::endl;
     }
-}
+    break;
+
+    case 1:{ // catch the object
+        // std::cout <<"stage 1 " <<std::endl;
+        int finger_joint_at_position = 0;
+        for (int i = 11; i < n_joints; i++){
+            err = 0.4 - d->qpos[i];
+            d->ctrl[i] = d->ctrl[i] + kp*(err);
+
+            // std::cout<< err << std::endl;
+
+            if (std::fabs(err)<0.02){
+                // cout<<"smaller"<<endl;
+                finger_joint_at_position ++;
+            }
+
+        }
+        if (finger_joint_at_position >= 15){
+                stage = 2;
+            }
+        break;
+    }
+   
+
+    case 2: { // lift the object.
+        // std::cout <<"stage 2 " <<std::endl;
+        int i = 5; 
+        err = 3 - d->qpos[i];
+        d->ctrl[i] = d->ctrl[i] + kp*(err);
+
+        err = 3 - d->qpos[6];
+         d->qpos[6] = d->ctrl[6] + kp*(err);
+        break;
+    }
+        
+    
+    default:
+        break;
+    } //switch 
+
+
+
+return stage;
+} // control system
 
 void pcontroller(const mjModel* m, mjData* d)
 {
-  cout << m->nu << m->nv <<endl;
-  if( m->nu==m->nv )
-  std::cout << "equal"<<endl;
+//   cout << m->nu << m->nv <<endl;
+//   if( m->nu==m->nv )
+//   std::cout << "equal"<<endl;
   double ref[] = {0.470887, 0.978366, 2.6895, -2.15875, 2.75034, 1.88727, 0.707};
+  // only one position due to the constriant from callback
+    // d->ctrl[0] = -10*(d->qpos[0]-0)-1*d->qvel[0];
 
-    mju_scl3(d->ctrl, d->qvel, -0.1);
+   int n_joints = m->nu;
+    float kp = 0.003f;
+    float kv = 0.01f;
+    double err = 0.0;
+    for(int i = 0; i < n_joints; i++)
+    {
+        err = ref[i] - d->qpos[i];
+        d->ctrl[i] = d->ctrl[i] + kp*(err) -kv * d->qvel[i];
+    }
 
 }
 
@@ -209,16 +284,17 @@ int main(int argc, const char** argv)
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////
-    double q7 = 0.707;
+    double q7 = 1.207;
     std::array<double, 16> O_T_EE_array;
     std::array<double, 7> q_actual_array = {0};
     for (auto i = 0; i < 7; i++)
         q_actual_array[i] = d->qpos[i];
 
-    O_T_EE_array[0] = -1; O_T_EE_array[4] = 0; O_T_EE_array[8] = 0;    O_T_EE_array[12] = -0.25;
-    O_T_EE_array[1] = 0; O_T_EE_array[5] = -1; O_T_EE_array[9] = 0;    O_T_EE_array[13] = 0.13;
-    O_T_EE_array[2] = 0; O_T_EE_array[6] = 0; O_T_EE_array[10] = 1;  O_T_EE_array[14] = 1.2;
+    O_T_EE_array[0] = 0; O_T_EE_array[4] = -0.5; O_T_EE_array[8] = 0.867;    O_T_EE_array[12] = 0.75;
+    O_T_EE_array[1] = 0; O_T_EE_array[5] = 0.867; O_T_EE_array[9] = 0.5;    O_T_EE_array[13] = -0.1;
+    O_T_EE_array[2] = 1; O_T_EE_array[6] = 0; O_T_EE_array[10] = 0;  O_T_EE_array[14] = 0.65;
     O_T_EE_array[3] = 0; O_T_EE_array[7] = 0; O_T_EE_array[11] = 0;   O_T_EE_array[15] = 1;      
+
 
     Ik_solution ik_sol;
     ik_sol.define_sol_par(O_T_EE_array, q_actual_array, q7);
@@ -268,17 +344,18 @@ int main(int argc, const char** argv)
     //mjcb_control = controlLaw;              // initialize a control law    
 
     double desired_real_time_factor = 1.0;  // Adjust this factor as needed
-    double normal_dt = 1.0 / 60.0;  // 60 Hz
-    double dt = normal_dt / desired_real_time_factor;
+    double normal_dt = 1.0 / 60.0;  // 
+    double dt = normal_dt / desired_real_time_factor; // 60 Hz for control system and rendering
     // m->opt.timestep = dt;  // the integral time in each step. should align with the step size defined earlier. 
     cout<<"the intergal time is " << m->opt.timestep<< endl;
     
 
     // for P controller the calling frequency influence the controled behavior
-    double controlSystem_dt = 1.0 / 60.0;  // 60 Hz for control system
+    double controlSystem_dt = 1.0 / 60.0;  
     double lastControlUpdateTime = 0.0;
     // mjcb_control = pcontroller;
     mjtNum start_time = d->time;;
+    int stage = 0; // flag to tell which stage it is right now.
     while( !glfwWindowShouldClose(window) )
     {        
 
@@ -295,10 +372,10 @@ int main(int argc, const char** argv)
             
             // mj_step(m,d);
             // mj_step1(m, d);
-            controlSystem(m, d, ref);
+            stage = controlSystem(m, d, ref, stage);
             // mj_step2(m,d);
-             lastControlUpdateTime = elapsed_time;
-        }
+            //  lastControlUpdateTime = elapsed_time;
+        
        
         
 
@@ -316,6 +393,7 @@ int main(int argc, const char** argv)
 
         // process pending GUI events, call GLFW callbacks
         glfwPollEvents();
+        }
     
     } // end simulation
 

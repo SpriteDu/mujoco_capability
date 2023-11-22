@@ -15,7 +15,19 @@
     <!--
     <general class="panda" name="actuator8" tendon="split" forcerange="-100 100" ctrlrange="0 255"
       gainprm="0.01568627451 0 0" biasprm="0 -100 -10"/>-->
-    
+    <!-- <motor joint = "joint1" name = "joint1" gear = "1" ctrllimited  ="true" ctrlrange= "-10 10"/>
+    <motor joint = "joint2" name = "joint2" gear = "1" ctrllimited  ="true" ctrlrange= "-10 10"/>
+    <motor joint = "joint3" name = "joint3" gear = "1" ctrllimited  ="true" ctrlrange= "-10 10"/>
+    <motor joint = "joint4" name = "joint4" gear = "1" ctrllimited  ="true" ctrlrange= "-10 10"/>
+    <motor joint = "joint5" name = "joint5" gear = "1" ctrllimited  ="true" ctrlrange= "-10 10"/>
+    <motor joint = "joint6" name = "joint6" gear = "1" ctrllimited  ="true" ctrlrange= "-10 10"/>
+    <motor joint = "joint7" name = "joint7" gear = "1" ctrllimited  ="true" ctrlrange= "-10 10"/>
+
+ -->
+
+
+
+
     <position name="forearm:1--base:1" joint="forearm:1--base:1" class="panda" kp="12" forcerange="-12 12" ctrlrange="-0.0001 0.0001"/>
     <!--  velocity="2.9671"  -->
     <position name="palm_axis:1--forearm:1" joint="palm_axis:1--forearm:1" class="panda" kp="12" forcerange="-12 12" ctrlrange="-0.785398 0.785398"/>

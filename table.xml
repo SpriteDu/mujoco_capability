@@ -1,14 +1,34 @@
+
+
+
 <mujocoinclude>
-    <body name="Table" pos="-1.0 -0.95 0" euler="0 0 0">        
+    <body name="Table" pos="0.5 -0.95 0" euler="0 0 0">        
         <joint type = "free"/>        
         <inertial mass="23.73" pos = "0.45 0.95 0.4854" diaginertia="8.64 2.05 10.28"/>
-        <geom pos="0 0 0" type="mesh" material="white" mesh="Table"  contype="0" conaffinity="0"/>   
+        <geom pos="0 0 0" type="mesh" material="white" mesh="Table"  contype="0" conaffinity="0" friction="0.1 0.005 0.0001"/>   
         <!-- set the collision mesh from convex mesh to none -->
         <!-- set the collision separately  -->
-        <geom class ="desktop" pos = "0.45 0.95 0.511"    euler = "0 0 0"/>        
+        <geom class ="desktop" pos = "0.45 0.95 0.511"    euler = "0 0 0" friction="1 0.005 0.0001"/>        
         <geom class ="leg" pos = "0.035 1.875 0.250"    euler = "0 0 0"/> 
         <geom class ="leg" pos = "0.865 1.865 0.250"    euler = "0 0 0"/> 
         <geom class ="leg" pos = "0.035 0.035 0.250"    euler = "0 0 0"/> 
         <geom class ="leg" pos = "0.865 0.035 0.250"    euler = "0 0 0"/>        
     </body>
 </mujocoinclude>
+
+
+<!-- <mujocoinclude>
+    <body name="Table" pos="-1.1 -0.95 0" euler="0 0 0">        
+        <joint type = "free"/>        
+        <inertial mass="23.73" pos = "0.45 0.95 0.4854" diaginertia="8.64 2.05 10.28"/>
+        <geom pos="0 0 0" type="mesh" material="white" mesh="Table"  friction="0.5 0.005 0.0001"/>   
+        <!-- set the collision mesh from convex mesh to none -->
+        <!-- set the collision separately  -->      
+    </body>
+</mujocoinclude> -->
+
+
+
+
+
+

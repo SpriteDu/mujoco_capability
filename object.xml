@@ -1,7 +1,11 @@
 <mujocoinclude>
-    <body name="Multi_shaped_object" pos="-0.35 0.0 0.5254" euler="0 0 0">    
-        <joint type = "free" damping = "0.1"/>
+    <body name="Multi_shaped_object" pos="0.69 -0.15 0.63" euler="0 0 1.67">
+    <!-- this position will be pushed   -->
+    <!-- <body name="Multi_shaped_object" pos="0.69 -0.30 0.63" euler="0 0 1.67">      -->
+    <!-- falling position -->
+    <!-- <body name="Multi_shaped_object" pos="0.69 -0.40 0.55" euler="0.3 0.5 1.67">  -->
+        <joint type = "free" damping = "0.000001"/>
         <inertial mass="0.89544" pos = "0.06 0.04 0.11" diaginertia="0.01 0.01 0.0001"/>
-        <geom pos="0 0 0" type="mesh" material="brown" mesh="Multi_shaped_object" friction="1 1 1"/>            
+        <geom pos="0 0 0" type="mesh" material="brown" mesh="Multi_shaped_object" friction="0.1 0.005 0.0001"/>            
     </body>
 </mujocoinclude>
