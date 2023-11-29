@@ -30,6 +30,10 @@
 #include "glfw_adapter.h"
 #include "simulate.h"
 #include "array_safety.h"
+#include "tool_kits.h"
+// #include <Eigen/Dense>
+
+// #include "ui.cpp"
 
 #define MUJOCO_PLUGIN_DIR "mujoco_plugin"
 
@@ -161,6 +165,85 @@ std::string getExecutableDir() {
   return "";
 }
 
+// the control system for this robot arm 
+int controlSystem(const mjModel* m, mjData* d, double ref[], int stage)
+{
+    int n_joints = m->nu;
+    float kp = 0.013f;
+    double err = 0.0;
+    double threshold = 0.01;
+    int joint_at_position = 0;
+
+    switch (stage)
+    {
+    case 0:{ // reach teh desired position 
+        d->ctrl[10] =1.5;
+        for(int i = 0; i < 9; i++) // the time of loop could affect the result 
+        {
+            
+            err = ref[i] - d->qpos[i];
+            d->ctrl[i] = d->ctrl[i] + kp*(err);
+            // std::cout<< err << "<=" <<threshold<< std::endl;
+            if(std::fabs(err) <= threshold){
+                joint_at_position++;
+                // std::cout<< "reached 1 " << std::endl;
+            }
+
+        }
+        for (int i = 11; i < n_joints; i++){
+            d->ctrl[i] = 0;
+        }
+        if ( joint_at_position ==7){
+                stage = 1;
+        }
+        // std::cout<< "not yet" << std::endl;
+    }
+    break;
+
+    case 1:{ // catch the object
+        // std::cout <<"stage 1 " <<std::endl;
+        int finger_joint_at_position = 0;
+        for (int i = 11; i < n_joints; i++){
+            err = 0.7 - d->qpos[i];
+            d->ctrl[i] = d->ctrl[i] + kp*(err);
+
+            // std::cout<< err << std::endl;
+
+            if (std::fabs(err)<0.02){
+                // cout<<"smaller"<<endl;
+                finger_joint_at_position ++;
+            }
+
+        }
+        if (finger_joint_at_position >= 5){
+                stage = 2;
+            }
+        break;
+    }
+   
+    case 2: { // lift the object.
+        // std::cout <<"stage 2 " <<std::endl;
+        int i = 5; 
+        err = 3 - d->qpos[i];
+        d->ctrl[i] = d->ctrl[i] + kp*(err);
+
+        err = 3 - d->qpos[6];
+         d->qpos[6] = d->ctrl[6] + kp*(err);
+        break;
+    }
+        
+    
+    default:
+        break;
+    } //switch 
+
+
+
+return stage;
+} // control system
+
+
+
 
 
 // scan for libraries in the plugin directory to load additional plugins
@@ -250,6 +333,31 @@ mjModel* LoadModel(const char* file, mj::Simulate& sim) {
 
   return mnew;
 }
+//////////////////
+         double ref[26] = {1.35707, -1.50824, -1.06781, -2.0287, -0.808474, 2.68296, 1.207, // Panda joints     
+            0, // Forearm --> Should be kept in 0 as it is not actuated
+            0, // Wrist adduction/abduction
+            0.50, // Wrist Flexion/Extension
+            1.5, // Thumb MCP Adduction
+            0.5, // Thumb MCP Flexion
+            0.70, // Thumb PIP Flexion
+            0.70, // Thumn DIP Flexion
+            1.5, // Index MCP Flexion
+            0.70, // Index PIP Flexion
+            0.70, // Index DIP Flexion
+            1.5, // Middle MCP Flexion
+            0.70, // MIddle PIP Flexion
+            0.70, // MIddle DIP Flexion
+            1.50, // Ring MCP flexion
+            0.70, // Ring PIP Flexion
+            0.70, // Ring DIP Flexion
+            1.50, // Little MCP Flexion
+            0.70, // Little PIP Flexion
+            0.70}; // Little DIP Flexion
+        int stage = 0; 
+    // for (int i = 0; i < 7; i++)
+    //     ref[i] = ik_sol.q_sol[i];
+////////////////////////
 
 // simulate in background thread (while rendering in main thread)
 void PhysicsLoop(mj::Simulate& sim) {
@@ -341,6 +449,7 @@ void PhysicsLoop(mj::Simulate& sim) {
               d->ctrl[i] = ctrlnoise[i];
             }
           }
+          // stage = controlSystem(m, d, ref, stage);
 
           // requested slow-down factor
           double slowdown = 100 / sim.percentRealTime[sim.real_time_index];
@@ -386,6 +495,7 @@ void PhysicsLoop(mj::Simulate& sim) {
                 break;
               }
             }
+            
           }
         }
 
@@ -393,6 +503,7 @@ void PhysicsLoop(mj::Simulate& sim) {
         else {
           // run mj_forward, to update rendering and joint sliders
           mj_forward(m, d);
+          stage = controlSystem(m, d, ref, stage);
         }
       }
     }  // release std::lock_guard<std::mutex>
@@ -468,6 +579,26 @@ int main(int argc, const char** argv) {
   mjvPerturb pert;
   mjv_defaultPerturb(&pert);
 
+// /////////////////////////////////////////////////////////////////////////////////////////////
+double q7 = 1.207;
+    std::array<double, 16> O_T_EE_array;
+    std::array<double, 7> q_actual_array = {0};
+    for (auto i = 0; i < 7; i++)
+        q_actual_array[i] = d->qpos[i];
+
+    O_T_EE_array[0] = 0; O_T_EE_array[4] = -0.5; O_T_EE_array[8] = 0.867;    O_T_EE_array[12] = 0.75;
+    O_T_EE_array[1] = 0; O_T_EE_array[5] = 0.867; O_T_EE_array[9] = 0.5;    O_T_EE_array[13] = -0.1;
+    O_T_EE_array[2] = 1; O_T_EE_array[6] = 0; O_T_EE_array[10] = 0;  O_T_EE_array[14] = 0.65;
+    O_T_EE_array[3] = 0; O_T_EE_array[7] = 0; O_T_EE_array[11] = 0;   O_T_EE_array[15] = 1;      
+
+
+    Ik_solution ik_sol;
+    // ik_sol.define_sol_par(O_T_EE_array, q_actual_array, q7);
+    // ik_sol.get_Solution();
+    // ik_sol.print_sol();
+// ////////////////////////////////////////////////////////////////////////////////////////////
+
+
   // simulate object encapsulates the UI
   auto sim = std::make_unique<mj::Simulate>(
       std::make_unique<mj::GlfwAdapter>(),
@@ -478,6 +609,8 @@ int main(int argc, const char** argv) {
   if (argc >  1) {
     filename = argv[1];
   }
+  
+  filename = "/home/jididu/Documents/mujoco-2.3.7/Project/mujoco-capability/franka_panda_RH8D_R.xml";
 
   // start physics thread
   std::thread physicsthreadhandle(&PhysicsThread, sim.get(), filename);

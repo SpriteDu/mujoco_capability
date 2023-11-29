@@ -11,8 +11,13 @@ all:
 	$(CXX) $(COMMON) -std=c++17 -c glfw_adapter.cc
 	$(CXX) $(COMMON) -std=c++17 -c glfw_dispatch.cc
 	$(CXX) $(COMMON) -std=c++17 -c platform_ui_adapter.cc
-	$(CXX) $(COMMON) -std=c++17 main.cc simulate.o glfw_adapter.o glfw_dispatch.o platform_ui_adapter.o uitools.o lodepng.o -lmujoco -lglfw -o simulate
+	
+	$(CXX) $(COMMON) -std=c++17 -c ../include/tool_kits.cpp
+	$(CXX) $(COMMON) -std=c++17 main.cc simulate.o glfw_adapter.o glfw_dispatch.o  platform_ui_adapter.o uitools.o lodepng.o -lmujoco -lglfw  tool_kits.o -o mujoco_control
+	
+	
 	rm uitools.o simulate.o glfw_adapter.o glfw_dispatch.o platform_ui_adapter.o lodepng.o
 
 
-# -I../include/mujoco -I../include  adapter.o
+# -I../include/mujoco -I../include  adapter.o franka_ik_He.o
+# $(CXX) $(COMMON) -std=c++17 -c ../include/franka_ik_He.hpp
