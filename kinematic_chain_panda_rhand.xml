@@ -118,11 +118,12 @@
                                     <inertial pos="0.00506186 -0.000203737 -0.0087338" quat="0.707662 0.0382635 -0.0379957 0.70449" mass="0.00441372" diaginertia="4.34031e-07 4.06754e-07 1.50155e-07"/>
                                     <joint name="Thumb_Proximal--Thumb_Methacarpal" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
                                     <geom pos="0.00506253 1.26601e-07 -0.010793" type="mesh" material="black" mesh="thumb_phalanx"/>
+                                    <!-- <site name="tip_thumb_site" pos="-6.23674e-05 6.16563e-07 -0.0215858" size="radius"/> -->
                                     <body name="Thumb_Distal" pos="-6.23674e-05 6.16563e-07 -0.0215858">
                                       <inertial pos="0.00560256 -0.00262057 -0.0121248" quat="0.634633 -0.0915234 0.0968285 0.761242" mass="0.00650951" diaginertia="5.45458e-07 5.01126e-07 3.14326e-07"/>
                                       <joint name="Thumb_Distal--Thumb_Proximal" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
                                       <geom pos="0.00506251 -1.31623e-07 0" type="mesh" material="black" mesh="tip"/>
-                                      <site name = "tip_thumb" pos = "0.005 -0.008 -0.017" size = "0.002"/>
+                                      <site name = "tip_thumb" pos = "0.005 -0.008 -0.017" size = "0.01 0.005 0.005" type = "capsule"/>
                                     </body>
                                   </body>
                                 </body>
@@ -139,7 +140,7 @@
                                     <inertial pos="-0.00452224 -0.00262003 -0.0121245" quat="0.634633 -0.0915234 0.0968285 0.761242" mass="0.00650951" diaginertia="5.45458e-07 5.01126e-07 3.14326e-07"/>
                                     <joint name="Index_Distal--Index_Middle" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
                                     <geom pos="-0.00506253 0 4.01497e-07" type="mesh" material="black" mesh="tip"/>
-                                    <site name = "tip_index" pos = "-0.005 -0.008 -0.017" size = "0.002"/>
+                                    <site name = "tip_index" pos = "-0.005 -0.008 -0.017" size = "0.01 0.005 0.005" type = "capsule"/>
                                   </body>
                                 </body>
                               </body>
@@ -155,7 +156,7 @@
                                     <inertial pos="-0.00452227 -0.00261993 -0.0121249" quat="0.634633 -0.0915234 0.0968285 0.761242" mass="0.00650951" diaginertia="5.45458e-07 5.01126e-07 3.14326e-07"/>
                                     <joint name="Middle_Distal--Middle_Middle" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
                                     <geom pos="-0.00506248 0 -6.09795e-07" type="mesh" material="black" mesh="tip"/>
-                                    <site name = "tip_middle" pos = "-0.005 -0.008 -0.017" size = "0.002"/>
+                                    <site name = "tip_middle" pos = "-0.005 -0.008 -0.017" size = "0.01 0.005 0.005" type = "capsule"/>
                                   </body>
                                 </body>
                               </body>
@@ -171,7 +172,7 @@
                                     <inertial pos="-0.00452232 -0.00261989 -0.0121254" quat="0.634633 -0.0915234 0.0968285 0.761242" mass="0.00650951" diaginertia="5.45458e-07 5.01126e-07 3.14326e-07"/>
                                     <joint name="Ring_Distal--Ring_Middle" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
                                     <geom pos="-0.00506254 1.36101e-07 -7.35729e-07" type="mesh" material="black" mesh="tip"/>
-                                    <site name = "tip_ring" pos = "-0.005 -0.008 -0.017" size = "0.002"/>
+                                    <site name = "tip_ring" pos = "-0.005 -0.008 -0.017" size = "0.01 0.005 0.005" type = "capsule"/>
                                   </body>
                                 </body>
                               </body>
@@ -187,7 +188,7 @@
                                     <inertial pos="-0.00452232 -0.00262 -0.0121245" quat="0.634633 -0.0915234 0.0968285 0.761242" mass="0.00650951" diaginertia="5.45458e-07 5.01126e-07 3.14326e-07"/>
                                     <joint name="Small_Distal--Small_Middle" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
                                     <geom pos="-0.00506244 0 0" type="mesh" material="black" mesh="tip"/>
-                                    <site name = "tip_small" pos = "-0.005 -0.008 -0.017" size = "0.002"/>
+                                    <site name = "tip_small" pos = "-0.005 -0.008 -0.017" size = "0.01 0.01 0.005" type = "capsule"/>
                                   </body>
                                 </body>
                               </body>                                        

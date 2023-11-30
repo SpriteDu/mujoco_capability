@@ -449,7 +449,7 @@ void PhysicsLoop(mj::Simulate& sim) {
               d->ctrl[i] = ctrlnoise[i];
             }
           }
-          // stage = controlSystem(m, d, ref, stage);
+          stage = controlSystem(m, d, ref, stage);
 
           // requested slow-down factor
           double slowdown = 100 / sim.percentRealTime[sim.real_time_index];

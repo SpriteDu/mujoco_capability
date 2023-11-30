@@ -6,7 +6,7 @@ add_library(
     tools_and_panda_ik    
     ${CMAKE_SOURCE_DIR}/include/tool_kits.cpp 
     ${CMAKE_SOURCE_DIR}/include/franka_ik_He.hpp
-    # ${CMAKE_SOURCE_DIR}/include/data_handler.h
+    ${CMAKE_SOURCE_DIR}/include/data_handler.h
 )
 
 find_package(Eigen3 REQUIRED)
@@ -14,7 +14,7 @@ find_package(Eigen3 REQUIRED)
 
 LINK_LIBRARIES(${CMAKE_SOURCE_DIR}/../../lib)
 
-add_executable(${PROJECT_NAME} main_panda_RH8D.cpp data_handler.cpp)
+add_executable(${PROJECT_NAME} main_panda_RH8D.cpp src/data_handler.cpp src/controller.cpp)
 #find_package(MUJOCO_LIB NAMES mujoco PATHS /home/jididu/Documents/mujoco-2.3.7/lib)
 
 #add_library(mylib src/add.cpp src/sub.cpp)

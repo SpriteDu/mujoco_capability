@@ -9,6 +9,8 @@
 #include <random>
 #include <string>
 #include "tool_kits.h"
+#include "ui.cpp"
+#include "data_handler.h"
 
 #define PI 3.14159265358979323846
 
@@ -40,6 +42,7 @@ void keyboard(GLFWwindow* window, int key, int scancode, int act, int mods)
     {
         mj_resetData(m, d);
         mj_forward(m, d);
+        // stage = 0;
     }
 }
 
@@ -134,7 +137,7 @@ int controlSystem(const mjModel* m, mjData* d, double ref[], int stage)
         // std::cout <<"stage 1 " <<std::endl;
         int finger_joint_at_position = 0;
         for (int i = 11; i < n_joints; i++){
-            err = 0.4 - d->qpos[i];
+            err = 0.7 - d->qpos[i];
             d->ctrl[i] = d->ctrl[i] + kp*(err);
 
             // std::cout<< err << std::endl;
@@ -145,7 +148,7 @@ int controlSystem(const mjModel* m, mjData* d, double ref[], int stage)
             }
 
         }
-        if (finger_joint_at_position >= 15){
+        if (finger_joint_at_position >= 5){
                 stage = 2;
             }
         break;
@@ -356,6 +359,8 @@ int main(int argc, const char** argv)
     // mjcb_control = pcontroller;
     mjtNum start_time = d->time;;
     int stage = 0; // flag to tell which stage it is right now.
+    DataHandler datahandler;
+    datahandler.openData();
     while( !glfwWindowShouldClose(window) )
     {        
 
@@ -373,9 +378,35 @@ int main(int argc, const char** argv)
             // mj_step(m,d);
             // mj_step1(m, d);
             stage = controlSystem(m, d, ref, stage);
+            datahandler.record_contact(m,d);
+            std::cout<<m->nsensordata<<std::endl;
+
+            for (int i = 0; i < m->nsensordata; ++i) {
+                std::cout<<d->sensordata[i]<<std::endl;
+                }
             // mj_step2(m,d);
             //  lastControlUpdateTime = elapsed_time;
-        
+
+            // std::cout << sizeof(d->contact) <<std::endl;
+            // std::cout << &d->contact[1]->pos[0]<<std::endl;
+
+
+
+
+    //         for (int i = 0; i < d->ncon; ++i) {
+    // mjContact* contact = &d->contact[i];
+    
+    // Example of printing contact position (assuming mjContact has these fields)
+    // std::cout << "Contact " << i << ": Position = ("
+    //           << contact->pos[0] << ", "
+    //           << contact->pos[1] << ", "
+    //           << contact->pos[2] << ")\n"
+    //           <<  contact->friction[0] << endl;
+
+             
+ 
+
+
        
         
 

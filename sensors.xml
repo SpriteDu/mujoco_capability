@@ -1,7 +1,7 @@
 <mujocoinclude>
 
 <sensor>
-      <framepos objtype="site" objname="tip_thumb"/>
+      <!-- <framepos objtype="site" objname="tip_thumb"/>
       <framelinvel objtype="site" objname="tip_thumb"/>
       <framepos objtype="site" objname="tip_index"/>
       <framelinvel objtype="site" objname="tip_index"/>
@@ -10,7 +10,18 @@
       <framepos objtype="site" objname="tip_ring"/>
       <framelinvel objtype="site" objname="tip_ring"/>
       <framepos objtype="site" objname="tip_small"/>
-      <framelinvel objtype="site" objname="tip_small"/>    
+      <framelinvel objtype="site" objname="tip_small"/>     -->
+
+      <!-- force sensors -->
+      <touch name="sensor_thumb" site ="tip_thumb"/>
+      <touch name="sensor_index" site ="tip_index"/>
+      <touch name="sensor_middle" site ="tip_middle"/>
+      <touch name="sensor_ring" site ="tip_ring"/>
+      <touch name="sensor_small" site ="tip_small"/>
+
 </sensor>  
+
+
   
 </mujocoinclude>
+      
