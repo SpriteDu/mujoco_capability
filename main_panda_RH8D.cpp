@@ -11,7 +11,7 @@
 #include <string>
 #include "tool_kits.h"
 #include "ui.cpp"
-#include "data_handler.h"
+#include "include/data_handler.h"
 
 #define PI 3.14159265358979323846
 
@@ -22,6 +22,7 @@ using Eigen::MatrixXd;
 mjModel* m = NULL;                  // MuJoCo model
 mjData* d = NULL;                   // MuJoCo data
 mjvCamera cam;                      // abstract camera
+mjvCamera cam2;
 mjvOption opt;                      // visualization options
 mjvScene scn;                       // abstract scene
 mjrContext con;                     // custom GPU context
@@ -392,6 +393,90 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
 
 
 }
+void depth_show (mjModel* model, mjData* data, int argc, const char** argv)
+{
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  GLFWwindow* window = glfwCreateWindow(1200, 800, "Camera", NULL, NULL);
+  glfwMakeContextCurrent(window);
+  glfwSwapInterval(1);
+
+    // mjv_defaultCamera(&cam2);
+  mjvOption sensor_option;
+  mjvPerturb sensor_perturb;
+  mjvScene sensor_scene;
+  mjrContext sensor_context;
+
+    mjvCamera rgbd_camera;
+  rgbd_camera.type = mjCAMERA_FIXED;
+  rgbd_camera.fixedcamid = mj_name2id(model, mjOBJ_CAMERA, "camera");
+
+
+  mjv_defaultOption(&sensor_option);
+  mjv_defaultScene(&sensor_scene);
+  mjr_defaultContext(&sensor_context);
+
+  // create scene and context
+  mjv_makeScene(model, &sensor_scene, 1000);
+  mjr_makeContext(model, &sensor_context, mjFONTSCALE_150);
+
+    // install GLFW mouse and keyboard callbacks
+    glfwSetKeyCallback(window, keyboard);
+    glfwSetCursorPosCallback(window, mouse_move);
+    glfwSetMouseButtonCallback(window, mouse_button);
+    glfwSetScrollCallback(window, scroll);
+
+    // install GLFW mouse and keyboard callbacks
+    glfwSetKeyCallback(window, keyboard);
+    glfwSetCursorPosCallback(window, mouse_move);
+    glfwSetMouseButtonCallback(window, mouse_button);
+    glfwSetScrollCallback(window, scroll);
+
+//   RGBD_mujoco mj_RGBD;
+
+  while (!glfwWindowShouldClose(window))
+  {
+    // get framebuffer viewport
+    mjrRect viewport = {0,0,0,0};
+    glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+    
+
+    mjv_updateScene(model, data, &sensor_option, NULL, &rgbd_camera, mjCAT_ALL, &sensor_scene);
+    mjr_render(viewport, &sensor_scene, &sensor_context);
+
+   int total = viewport.width*viewport.height;
+    std::unique_ptr<float []> depth(new float[total]);
+    
+  mjr_readPixels(nullptr, depth.get(), viewport, &sensor_context);
+  // convert to meters
+  float extent = model->stat.extent;
+
+float near = model->vis.map.znear * extent;
+  float far = model->vis.map.zfar * extent;
+ for (int i=0; i<total; ++i) {
+    depth[i] = near / (1.0f - depth[i] * (1.0f - near/far));
+  }
+
+  // convert to a 3-channel 8-bit image
+  std::unique_ptr<unsigned char[]> depth8(new unsigned char[3*viewport.width*viewport.height]);
+  for (int i=0; i<viewport.width*viewport.height; i++) {
+    depth8[3*i] = depth8[3*i+1] = depth8[3*i+2] = depth[i] * 255;
+  }
+
+  mjr_drawPixels(depth8.get(), nullptr, viewport, &sensor_context);
+
+    glfwSwapBuffers(window);
+
+    // process pending GUI events, call GLFW callbacks
+    glfwPollEvents();
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+
+
+  }
+
+  mjv_freeScene(&sensor_scene);
+  mjr_freeContext(&sensor_context);
+
+}
 void second_view (mjModel* model, mjData* data, int argc, const char** argv)
 {
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
@@ -413,8 +498,13 @@ void second_view (mjModel* model, mjData* data, int argc, const char** argv)
   mjv_makeScene(model, &sensor_scene, 1000);
   mjr_makeContext(model, &sensor_context, mjFONTSCALE_150);
 
-//   RGBD_mujoco mj_RGBD;
+    // install GLFW mouse and keyboard callbacks
+    glfwSetKeyCallback(window, keyboard);
+    glfwSetCursorPosCallback(window, mouse_move);
+    glfwSetMouseButtonCallback(window, mouse_button);
+    glfwSetScrollCallback(window, scroll);
 
+//   Glfw rendering
   while (!glfwWindowShouldClose(window))
   {
     // get framebuffer viewport
@@ -430,6 +520,7 @@ void second_view (mjModel* model, mjData* data, int argc, const char** argv)
 
     // process pending GUI events, call GLFW callbacks
     glfwPollEvents();
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));
 
 
   }
@@ -471,10 +562,13 @@ int main(int argc, const char** argv)
     if( !glfwInit() )
         mju_error("Could not initialize GLFW");
   std::thread simulation_thread(simulation, m, d,argc, argv);
-    std::thread view_thread(second_view, m, d,argc, argv);
+    // std::thread view_thread(second_view, m, d,argc, argv);
+    std::thread depth_thread(depth_show, m, d,argc, argv);
 
   simulation_thread.join();
-  view_thread.join();
+//   view_thread.join();
+    depth_thread.join();
+
 
     
     // free MuJoCo model and data, deactivate
@@ -488,4 +582,3 @@ int main(int argc, const char** argv)
     //delete[] corr_sys;
     return 1;
 }
-
