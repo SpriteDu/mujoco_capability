@@ -21,6 +21,7 @@
         <include file="kinematic_chain_panda_rhand.xml"/>
         <include file="table.xml"/>
         <include file="object.xml"/>
+        <include file="camera.xml"/>
   </worldbody>  
 
   <keyframe>

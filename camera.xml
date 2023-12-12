@@ -1,0 +1,6 @@
+<mujocoinclude>
+
+<camera name="camera" pos="0.8 0.5 3" zaxis="0 1 0" mode="fixed" fovy="45"/>
+
+
+</mujocoinclude>

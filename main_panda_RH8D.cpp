@@ -10,7 +10,7 @@
 #include <random>
 #include <string>
 #include "tool_kits.h"
-#include "ui.cpp"
+// #include "ui.cpp"
 #include "include/data_handler.h"
 
 #define PI 3.14159265358979323846
