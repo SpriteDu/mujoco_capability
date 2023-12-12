@@ -2,7 +2,7 @@
 # which is commonly available through your distro's package manager.
 # On Debian and Ubuntu, GLFW can be installed via `apt install libglfw3-dev`.
 
-COMMON=-O2 -I../include  -L../lib -pthread -Wl,-no-as-needed -Wl,-rpath,'$$ORIGIN'/../lib
+COMMON=-O2 -I../include  -I../../../include -L../lib -pthread -Wl,-no-as-needed -Wl,-rpath,'$$ORIGIN'/../lib
 
 all:
 	$(CXX) $(COMMON) -std=c++17 -c lodepng.cpp
