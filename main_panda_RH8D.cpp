@@ -392,6 +392,52 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
 
 
 }
+void second_view (mjModel* model, mjData* data, int argc, const char** argv)
+{
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  GLFWwindow* window = glfwCreateWindow(1200, 800, "Camera", NULL, NULL);
+  glfwMakeContextCurrent(window);
+  glfwSwapInterval(1);
+
+
+  mjvOption sensor_option;
+  mjvPerturb sensor_perturb;
+  mjvScene sensor_scene;
+  mjrContext sensor_context;
+
+  mjv_defaultOption(&sensor_option);
+  mjv_defaultScene(&sensor_scene);
+  mjr_defaultContext(&sensor_context);
+
+  // create scene and context
+  mjv_makeScene(model, &sensor_scene, 1000);
+  mjr_makeContext(model, &sensor_context, mjFONTSCALE_150);
+
+//   RGBD_mujoco mj_RGBD;
+
+  while (!glfwWindowShouldClose(window))
+  {
+    // get framebuffer viewport
+    mjrRect viewport = {0,0,0,0};
+    glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+    
+
+    mjv_updateScene(model, data, &sensor_option, NULL, &cam, mjCAT_ALL, &sensor_scene);
+    mjr_render(viewport, &sensor_scene, &sensor_context);
+
+
+    glfwSwapBuffers(window);
+
+    // process pending GUI events, call GLFW callbacks
+    glfwPollEvents();
+
+
+  }
+
+  mjv_freeScene(&sensor_scene);
+  mjr_freeContext(&sensor_context);
+
+}
 // main function
 int main(int argc, const char** argv)
 {
@@ -425,7 +471,10 @@ int main(int argc, const char** argv)
     if( !glfwInit() )
         mju_error("Could not initialize GLFW");
   std::thread simulation_thread(simulation, m, d,argc, argv);
+    std::thread view_thread(second_view, m, d,argc, argv);
+
   simulation_thread.join();
+  view_thread.join();
 
     
     // free MuJoCo model and data, deactivate
