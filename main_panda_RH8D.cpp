@@ -4,6 +4,7 @@
 #include <iostream>
 #include <Eigen/Dense>
 #include <time.h>
+#include <chrono>
 #include <thread>
 #include <iostream>
 #include <random>
@@ -24,6 +25,7 @@ mjvCamera cam;                      // abstract camera
 mjvOption opt;                      // visualization options
 mjvScene scn;                       // abstract scene
 mjrContext con;                     // custom GPU context
+mjrContext con_hint;
 
 // mouse interaction
 bool button_left = false;
@@ -207,40 +209,9 @@ void printSensorData(const mjModel* m, mjData* d, bool posvel)
             std::cout << d->sensordata[i*6 + 3] << d->sensordata[i*6 + 4] << d->sensordata[i*6 + 5] << std::endl;
 }
 
-// main function
-int main(int argc, const char** argv)
+void simulation (mjModel* model, mjData* data, int argc, const char** argv)
 {
-    // check command-line arguments
-    if( argc!=2 )
-    {
-        printf(" No arguments passed. Loading model...\n");
-        //return 0;
-    }
-
-    // load and compile model
-    char error[1000] = "Could not load binary model";
-
-    if(argc < 2) {m = mj_loadXML(filename, 0, error, 1000);}
-    else
-    {
-        if( strlen(argv[1])>4 && !strcmp(argv[1]+strlen(argv[1])-4, ".mjb") )
-            m = mj_loadModel(argv[1], 0);
-        else
-            m = mj_loadXML(argv[1], 0, error, 1000);
-    }
-    if( !m )
-        mju_error_s("Load model error: %s", error);
-
-    // make data
-    d = mj_makeData(m);
-
-
-
-    // init GLFW
-    if( !glfwInit() )
-        mju_error("Could not initialize GLFW");
-
-    // create window, make OpenGL context current, request v-sync
+// create window, make OpenGL context current, request v-sync
     GLFWwindow* window = glfwCreateWindow(1400, 900, "Robo arm hand simulation", NULL, NULL);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
@@ -252,8 +223,8 @@ int main(int argc, const char** argv)
     mjr_defaultContext(&con);
 
     // create scene and context
-    mjv_makeScene(m, &scn, 2000);
-    mjr_makeContext(m, &con, mjFONTSCALE_150);
+    mjv_makeScene(model, &scn, 2000);
+    mjr_makeContext(model, &con, mjFONTSCALE_150);
 
     double arr_view[] = {86.68,-9.65863,2.54165,0.171193,0.0378619,0.61732};
     cam.azimuth = arr_view[0];
@@ -306,7 +277,7 @@ int main(int argc, const char** argv)
     /////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    int ncon = d->ncon; // Number of contacts
+    int ncon = data->ncon; // Number of contacts
 
     double ref[n_joints] = {-1.42172, -1.18835, 0.977646, -2.34855, 0.884779, 1.46295, 0, // Panda joints
             0, // Forearm --> Should be kept in 0 as it is not actuated
@@ -333,13 +304,7 @@ int main(int argc, const char** argv)
         ref[i] = ik_sol.q_sol[i];
 
     // run main loop, target real-time simulation and 60 fps rendering
-    /*
-    MatrixXd m2(2,2);
-    m2(0,0) = 3;
-    m2(1,0) = 2.5;
-    m2(0,1) = -1;
-    m2(1,1) = 4;
-    std::cout << m2 << std::endl;*/
+
 
     // get framebuffer viewport
     mjrRect viewport = {0, 0, 0, 0};
@@ -350,47 +315,40 @@ int main(int argc, const char** argv)
     double normal_dt = 1.0 / 60.0;  // 
     double dt = normal_dt / desired_real_time_factor; // 60 Hz for control system and rendering
     // m->opt.timestep = dt;  // the integral time in each step. should align with the step size defined earlier. 
-    cout<<"the intergal time is " << m->opt.timestep<< endl;
+    cout<<"the intergal time is " << model->opt.timestep<< endl;
     
 
     // for P controller the calling frequency influence the controled behavior
     double controlSystem_dt = 1.0 / 60.0;  
     double lastControlUpdateTime = 0.0;
     // mjcb_control = pcontroller;
-    mjtNum start_time = d->time;;
+    mjtNum start_time = data->time;;
     int stage = 0; // flag to tell which stage it is right now.
     DataHandler datahandler;
     datahandler.openData();
     while( !glfwWindowShouldClose(window) )
     {        
 
-        mjtNum simstart = d->time;
+        mjtNum simstart = data->time;
         
         // while last step is finished and a frame is rendered,, keep do the simulation without re-rendering.
-        while (d->time - simstart < dt) {
-        mj_step(m, d);
+        while (data->time - simstart < dt) {
+        mj_step(model, data);
         }
         
-        mjtNum elapsed_time = d->time - start_time;//set after the while loop to decrease the influence from.
+        mjtNum elapsed_time = data->time - start_time;//set after the while loop to decrease the influence from.
         //steady the calling frequency of controllSystem.
         if (elapsed_time - lastControlUpdateTime >= controlSystem_dt){
             
             // mj_step(m,d);
             // mj_step1(m, d);
-            stage = controlSystem(m, d, ref, stage);
-            datahandler.record_contact(m,d);
-            std::cout<<m->nsensordata<<std::endl;
+            stage = controlSystem(model, data, ref, stage);
+            datahandler.record_contact(model,data);
+            // std::cout<<m->nsensordata<<std::endl;
 
-            for (int i = 0; i < m->nsensordata; ++i) {
-                std::cout<<d->sensordata[i]<<std::endl;
-                }
-            // mj_step2(m,d);
-            //  lastControlUpdateTime = elapsed_time;
-
-            // std::cout << sizeof(d->contact) <<std::endl;
-            // std::cout << &d->contact[1]->pos[0]<<std::endl;
-
-
+            // for (int i = 0; i < m->nsensordata; ++i) {
+            //     std::cout<<data->sensordata[i]<<std::endl;
+            //     }
 
 
     //         for (int i = 0; i < d->ncon; ++i) {
@@ -416,7 +374,7 @@ int main(int argc, const char** argv)
         glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
 
         // update scene and render
-        mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
+        mjv_updateScene(model, data, &opt, NULL, &cam, mjCAT_ALL, &scn);
         mjr_render(viewport, &scn, &con);
 
         // swap OpenGL buffers (blocking call due to v-sync)
@@ -432,6 +390,44 @@ int main(int argc, const char** argv)
     mjv_freeScene(&scn);
     mjr_freeContext(&con);
 
+
+}
+// main function
+int main(int argc, const char** argv)
+{
+    // check command-line arguments
+    if( argc!=2 )
+    {
+        printf(" No arguments passed. Loading model...\n");
+        //return 0;
+    }
+
+    // load and compile model
+    char error[1000] = "Could not load binary model";
+
+    if(argc < 2) {m = mj_loadXML(filename, 0, error, 1000);}
+    else
+    {
+        if( strlen(argv[1])>4 && !strcmp(argv[1]+strlen(argv[1])-4, ".mjb") )
+            m = mj_loadModel(argv[1], 0);
+        else
+            m = mj_loadXML(argv[1], 0, error, 1000);
+    }
+    if( !m )
+        mju_error_s("Load model error: %s", error);
+
+    // make data
+    d = mj_makeData(m);
+
+
+
+    // init GLFW
+    if( !glfwInit() )
+        mju_error("Could not initialize GLFW");
+  std::thread simulation_thread(simulation, m, d,argc, argv);
+  simulation_thread.join();
+
+    
     // free MuJoCo model and data, deactivate
     mj_deleteData(d);
     mj_deleteModel(m);
@@ -443,24 +439,4 @@ int main(int argc, const char** argv)
     //delete[] corr_sys;
     return 1;
 }
-
-//         // // Maintain a consistent frame rate using sleep
-//         // double sleep_time = dt - (glfwGetTime() - start_time);
-//         // if (sleep_time > 0)
-//         // {
-//         //     // Sleep to control the frame rate
-//         //     // Platform-specific sleep or delay function
-//         //     std::this_thread::sleep_for(std::chrono::duration<double>(sleep_time));
-//         // }
-
-//         /*ncon = d->ncon; // Number of contacts
-//         std::cout << ncon << "/ " << d->contact[0].pos[0] << "/ " << d->contact[0].pos[1] << "/ " << d->contact[0].pos[2] <<
-//                              "/ " << d->contact[0].frame[0] << "/ " << d->contact[0].frame[1] << "/ " << d->contact[0].frame[2] <<
-//                              "/ " << d->contact[0].mu << "/ " << d->contact[0].geom1 <<  "/ " << d->contact[0].geom2
-//                 << std::endl;*/
-
-
-
-
-//         //printf("{%f, %f, %f, %f, %f, %f};\n",cam.azimuth,cam.elevation, cam.distance,cam.lookat[0],cam.lookat[1],cam.lookat[2]);
 

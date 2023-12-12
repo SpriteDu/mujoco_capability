@@ -10,6 +10,7 @@ add_library(
 )
 
 find_package(Eigen3 REQUIRED)
+find_package(Threads REQUIRED)
 
 
 LINK_LIBRARIES(${CMAKE_SOURCE_DIR}/../../lib)
@@ -33,6 +34,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/../../../
 target_link_libraries(${PROJECT_NAME} PRIVATE mujoco)
 #target_link_libraries(${PROJECT_NAME} PRIVATE ${MUJOCO_LIB})
 target_link_libraries(${PROJECT_NAME} PRIVATE Eigen3::Eigen)
+target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE -lglfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE -lGL)
