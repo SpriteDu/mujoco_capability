@@ -220,6 +220,9 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
     // initialize visualization data structures
     mjv_defaultCamera(&cam);
     mjv_defaultOption(&opt);
+    opt.flags[mjVIS_CONTACTFORCE] = 1;
+    opt.flags[mjVIS_CONTACTSPLIT] = true;
+    std::cout<<opt.flags[mjVIS_CONTACTFORCE]<<"true"<<std::endl;
     mjv_defaultScene(&scn);
     mjr_defaultContext(&con);
 
@@ -412,6 +415,9 @@ void depth_show (mjModel* model, mjData* data, int argc, const char** argv)
 
 
   mjv_defaultOption(&sensor_option);
+//   sensor_option.flags[mjVIS_CONTACTFORCE] = 1;
+// std::cout << "mjVIS_CONTACTFORCE flag is: " << (opt.flags[mjVIS_CONTACTFORCE] ? "true" : "false") << std::endl;
+
   mjv_defaultScene(&sensor_scene);
   mjr_defaultContext(&sensor_context);
 
