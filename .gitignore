@@ -1,0 +1,104 @@
+### C++ ###
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+### Linux ###
+*~
+
+# temporary files which can be created if a process still has a handle open of a deleted file
+.fuse_hidden*
+
+# KDE directory preferences
+.directory
+
+# Linux trash folder which might appear on any partition or disk
+.Trash-*
+
+# .nfs files are created when an open file is removed but is still being accessed
+.nfs*
+build/cmake_install.cmake
+build/CMakeCache.txt
+build/libtools_and_panda_ik.a
+build/Makefile
+build/mujoco_control
+build/MUJOCO_LOG.TXT
+build/New_Record.csv
+build/CMakeFiles/CMakeDirectoryInformation.cmake
+build/CMakeFiles/CMakeError.log
+build/CMakeFiles/CMakeOutput.log
+build/CMakeFiles/Makefile.cmake
+build/CMakeFiles/Makefile2
+build/CMakeFiles/progress.marks
+build/CMakeFiles/TargetDirectories.txt
+build/CMakeFiles/3.16.3/CMakeSystem.cmake
+build/CMakeFiles/mujoco_control.dir/build.make
+build/CMakeFiles/mujoco_control.dir/cmake_clean.cmake
+build/CMakeFiles/mujoco_control.dir/CXX.includecache
+build/CMakeFiles/mujoco_control.dir/depend.internal
+build/CMakeFiles/mujoco_control.dir/depend.make
+build/CMakeFiles/mujoco_control.dir/DependInfo.cmake
+build/CMakeFiles/mujoco_control.dir/flags.make
+build/CMakeFiles/mujoco_control.dir/link.txt
+build/CMakeFiles/mujoco_control.dir/main_panda_RH8D.cpp.o
+build/CMakeFiles/mujoco_control.dir/progress.make
+build/CMakeFiles/tools_and_panda_ik.dir/build.make
+build/CMakeFiles/tools_and_panda_ik.dir/CXX.includecache
+build/CMakeFiles/tools_and_panda_ik.dir/depend.internal
+build/CMakeFiles/tools_and_panda_ik.dir/DependInfo.cmake
+build/CMakeFiles/tools_and_panda_ik.dir/progress.make
+build/CMakeFiles/tools_and_panda_ik.dir/include/tool_kits.cpp.o
+build/Makefile
+build/mujoco_control
+build/CMakeFiles/CMakeDirectoryInformation.cmake
+build/CMakeFiles/CMakeOutput.log
+build/CMakeFiles/Makefile.cmake
+build/CMakeFiles/Makefile2
+build/CMakeFiles/progress.marks
+build/CMakeFiles/TargetDirectories.txt
+build/CMakeFiles/3.16.3/CMakeSystem.cmake
+build/CMakeFiles/mujoco_control.dir/build.make
+build/CMakeFiles/mujoco_control.dir/cmake_clean.cmake
+build/CMakeFiles/mujoco_control.dir/CXX.includecache
+build/CMakeFiles/mujoco_control.dir/depend.internal
+build/CMakeFiles/mujoco_control.dir/depend.make
+build/CMakeFiles/mujoco_control.dir/DependInfo.cmake
+build/CMakeFiles/mujoco_control.dir/flags.make
+build/CMakeFiles/mujoco_control.dir/link.txt
+build/CMakeFiles/mujoco_control.dir/main_panda_RH8D.cpp.o
+build/CMakeFiles/mujoco_control.dir/progress.make
+build/CMakeFiles/tools_and_panda_ik.dir/build.make
+build/CMakeFiles/tools_and_panda_ik.dir/CXX.includecache
+build/CMakeFiles/tools_and_panda_ik.dir/depend.internal
+build/CMakeFiles/tools_and_panda_ik.dir/DependInfo.cmake
+build/CMakeFiles/tools_and_panda_ik.dir/progress.make
+build/CMakeFiles/tools_and_panda_ik.dir/include/tool_kits.cpp.o
