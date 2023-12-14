@@ -221,7 +221,7 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
     mjv_defaultCamera(&cam);
     mjv_defaultOption(&opt);
     opt.flags[mjVIS_CONTACTFORCE] = 1;
-    opt.flags[mjVIS_CONTACTSPLIT] = true;
+    // opt.flags[mjVIS_CONTACTSPLIT] = true;
     std::cout<<opt.flags[mjVIS_CONTACTFORCE]<<"true"<<std::endl;
     mjv_defaultScene(&scn);
     mjr_defaultContext(&con);
@@ -330,8 +330,26 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
     int stage = 0; // flag to tell which stage it is right now.
     DataHandler datahandler;
     datahandler.openData();
+
+    const char* objectName = "Small_Proximal";
+    int objectID = mj_name2id(m, mjOBJ_BODY, objectName);
+    const char* fingerTipName = "Middle_Distal--Middle_Middle";
+    const int indexTipID = mj_name2id(m, mjOBJ_JOINT, fingerTipName);
+    mjtNum tip_index_force[6];
+    int tip_index_ncon{0};
+    int object_ncon{0};
+    int bodyID{-1};
+    
+    const char* tableName = "Table";
+    const int tableID = mj_name2id(m, mjOBJ_BODY tableName);
+    int table_ncon{0};
+    
+
     while( !glfwWindowShouldClose(window) )
     {        
+        
+        
+        
 
         mjtNum simstart = data->time;
         
@@ -339,7 +357,65 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
         while (data->time - simstart < dt) {
         mj_step(model, data);
         }
+
+        for (int i = 0; i < d->ncon; i++) {//loop over all contacts. 
+            // std::cout<< "index:" <<i << "\n";
+                int body1 = m->geom_bodyid[d->contact[i].geom1];
+                int body2 = m->geom_bodyid[d->contact[i].geom2];
+            // std::cout<< objectID << " ";
+            // std::cout<< body1 <<" ";
+            // std::cout<< body2 << "\n";
+
+
+            if (body1 == objectID || body2 == objectID) { 
+                
+                object_ncon++;
+
+                body1 == objectID ? bodyID = body2 : bodyID = body1; // Corrected assignment operator
+                // First, try only focus on the finger tip, also count the number of contacts on each body
+                // Index finger 
+                // std::cout<< "bodyID is " <<bodyID <<"and indexTipID is " << indexTipID <<std::endl;
+                if (bodyID == indexTipID) {
+                    mj_contactForce(m, d, i, tip_index_force);
+                    tip_index_ncon++;
+                    std::cout << "Contact Force as a Vector: ["
+                        << tip_index_force[0] << ", "
+                        << tip_index_force[1] << ", "
+                        << tip_index_force[2] << "]" << " Number " << tip_index_ncon << std::endl;
+                }
+
+                std::cout<<"ID of table is " << tableID << " body is" << bodyID <<std::endl;
+                if (bodyID == tableID){
+                    mj_contactForce(m, d, i, tip_index_force);
+                    table_ncon++;
+                    std::cout << "Contact Force with the table as a Vector: ["
+                        << tip_index_force[0] << ", "
+                        << tip_index_force[1] << ", "
+                        << tip_index_force[2] << "]" << " Number " << table_ncon << std::endl;
+                }
+            }
+        }
+
+
+
+        //         switch (bodyID) {
+        //             case indexTipID:
+        //                 mj_contactForce(m, d, i, tip_index_force);
+        //                 tip_index_ncon++;
+        //                 std::cout << "Contact Force as a Vector: ["
+        //                         << tip_index_force[0] << ", "
+        //                         << tip_index_force[1] << ", "
+        //                         << tip_index_force[2] << "]" << " Number " << tip_index_ncon << std::endl;
+        //                 break;
+        //             default:
+        //                 break;
+        //         }
+        //     }
+        // }
+
+
         
+
         mjtNum elapsed_time = data->time - start_time;//set after the while loop to decrease the influence from.
         //steady the calling frequency of controllSystem.
         if (elapsed_time - lastControlUpdateTime >= controlSystem_dt){
@@ -567,13 +643,14 @@ int main(int argc, const char** argv)
     // init GLFW
     if( !glfwInit() )
         mju_error("Could not initialize GLFW");
+ // calling thread form simulaiton and depth camera       
   std::thread simulation_thread(simulation, m, d,argc, argv);
     // std::thread view_thread(second_view, m, d,argc, argv);
-    std::thread depth_thread(depth_show, m, d,argc, argv);
+    // std::thread depth_thread(depth_show, m, d,argc, argv);
 
   simulation_thread.join();
 //   view_thread.join();
-    depth_thread.join();
+    // depth_thread.join();
 
 
     
