@@ -12,6 +12,7 @@
 #include "tool_kits.h"
 // #include "ui.cpp"
 #include "include/data_handler.h"
+#include "include/array_safety.h"
 
 #define PI 3.14159265358979323846
 
@@ -341,7 +342,7 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
     int bodyID{-1};
     
     const char* tableName = "Table";
-    const int tableID = mj_name2id(m, mjOBJ_BODY tableName);
+    const int tableID = mj_name2id(m, mjOBJ_BODY, tableName);
     int table_ncon{0};
     
 
@@ -472,7 +473,7 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
 
 
 }
-void depth_show (mjModel* model, mjData* data, int argc, const char** argv)
+void depth_show (mjModel* model, mjData* data,int argc, const char** argv)
 {
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
   GLFWwindow* window = glfwCreateWindow(1200, 800, "Camera", NULL, NULL);
@@ -507,46 +508,540 @@ void depth_show (mjModel* model, mjData* data, int argc, const char** argv)
     glfwSetMouseButtonCallback(window, mouse_button);
     glfwSetScrollCallback(window, scroll);
 
-    // install GLFW mouse and keyboard callbacks
-    glfwSetKeyCallback(window, keyboard);
-    glfwSetCursorPosCallback(window, mouse_move);
-    glfwSetMouseButtonCallback(window, mouse_button);
-    glfwSetScrollCallback(window, scroll);
-
 //   RGBD_mujoco mj_RGBD;
+    // get framebuffer viewport
+    // mjrRect viewport = {0,0,0,0};
+    mjrRect viewport =  mjr_maxViewport(&con);
+        int W = viewport.width;
+    int H = viewport.height;
+
+    glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+    int total = viewport.width*viewport.height;
+    std::unique_ptr<float []> depth(new float[total]);
+    std::unique_ptr<unsigned char[]> depth8(new unsigned char[3*viewport.width*viewport.height]);
+
+  double duration = 10, fps = 30;
+  // create output rgb file
+  std::FILE* fp = std::fopen(argv[5], "wb");
+  if (!fp) {
+    mju_error("Could not open rgbfile for writing");
+  }
+
+  double frametime = 0;
+  int framecount = 0;
+  namespace mju = ::mujoco::sample_util;
+
 
   while (!glfwWindowShouldClose(window))
   {
-    // get framebuffer viewport
-    mjrRect viewport = {0,0,0,0};
-    glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
-    
 
+    if ((d->time-frametime)>1/fps || frametime==0) {
     mjv_updateScene(model, data, &sensor_option, NULL, &rgbd_camera, mjCAT_ALL, &sensor_scene);
     mjr_render(viewport, &sensor_scene, &sensor_context);
 
-   int total = viewport.width*viewport.height;
-    std::unique_ptr<float []> depth(new float[total]);
+
+    // mjr_readPixels(nullptr, depth.get(), viewport, &sensor_context);
+
+    // convert to meters
+    float extent = model->stat.extent;
+    float near = model->vis.map.znear * extent;
+    float far = model->vis.map.zfar * extent;
+    for (int i=0; i<total; ++i) {
+        depth[i] = near / (1.0f - depth[i] * (1.0f - near/far));
+      }    
+
+// convert to a 3-channel 8-bit image
+    mjr_readPixels(nullptr, depth.get(), viewport, &sensor_context);
+    for (int i=0; i<viewport.width*viewport.height; i++) {
+      depth8[3*i] = depth8[3*i+1] = depth8[3*i+2] = depth[i] * 255;
+    }
     
-  mjr_readPixels(nullptr, depth.get(), viewport, &sensor_context);
-  // convert to meters
-  float extent = model->stat.extent;
-
-float near = model->vis.map.znear * extent;
-  float far = model->vis.map.zfar * extent;
- for (int i=0; i<total; ++i) {
-    depth[i] = near / (1.0f - depth[i] * (1.0f - near/far));
-  }
-
-  // convert to a 3-channel 8-bit image
-  std::unique_ptr<unsigned char[]> depth8(new unsigned char[3*viewport.width*viewport.height]);
-  for (int i=0; i<viewport.width*viewport.height; i++) {
-    depth8[3*i] = depth8[3*i+1] = depth8[3*i+2] = depth[i] * 255;
-  }
-
-  mjr_drawPixels(depth8.get(), nullptr, viewport, &sensor_context);
-
+    mjr_drawPixels(depth8.get(), nullptr, viewport, &sensor_context);
+    // add time stamp in upper-left corner
+      char stamp[50];
+    mju::sprintf_arr(stamp, "Time = %.3f", d->time);
+    mjr_overlay(mjFONT_NORMAL, mjGRID_TOPLEFT, viewport, stamp, NULL, &sensor_context);
+    std::fwrite(depth8.get(), 3, W*H, fp);
     glfwSwapBuffers(window);
+
+    // process pending GUI events, call GLFW callbacks
+    glfwPollEvents();
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+
+  }
+  }
+
+  mjv_freeScene(&sensor_scene);
+  mjr_freeContext(&sensor_context);
+
+}
+
+void initOpenGL(void) {
+  //------------------------ EGL
+#if defined(MJ_EGL)
+  // desired config
+  const EGLint configAttribs[] = {
+    EGL_RED_SIZE,           8,
+    EGL_GREEN_SIZE,         8,
+    EGL_BLUE_SIZE,          8,
+    EGL_ALPHA_SIZE,         8,
+    EGL_DEPTH_SIZE,         24,
+    EGL_STENCIL_SIZE,       8,
+    EGL_COLOR_BUFFER_TYPE,  EGL_RGB_BUFFER,
+    EGL_SURFACE_TYPE,       EGL_PBUFFER_BIT,
+    EGL_RENDERABLE_TYPE,    EGL_OPENGL_BIT,
+    EGL_NONE
+  };
+
+  // get default display
+  EGLDisplay eglDpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+  if (eglDpy==EGL_NO_DISPLAY) {
+    mju_error("Could not get EGL display, error 0x%x\n", eglGetError());
+  }
+
+  // initialize
+  EGLint major, minor;
+  if (eglInitialize(eglDpy, &major, &minor)!=EGL_TRUE) {
+    mju_error("Could not initialize EGL, error 0x%x\n", eglGetError());
+  }
+
+  // choose config
+  EGLint numConfigs;
+  EGLConfig eglCfg;
+  if (eglChooseConfig(eglDpy, configAttribs, &eglCfg, 1, &numConfigs)!=EGL_TRUE) {
+    mju_error("Could not choose EGL config, error 0x%x\n", eglGetError());
+  }
+
+  // bind OpenGL API
+  if (eglBindAPI(EGL_OPENGL_API)!=EGL_TRUE) {
+    mju_error("Could not bind EGL OpenGL API, error 0x%x\n", eglGetError());
+  }
+
+  // create context
+  EGLContext eglCtx = eglCreateContext(eglDpy, eglCfg, EGL_NO_CONTEXT, NULL);
+  if (eglCtx==EGL_NO_CONTEXT) {
+    mju_error("Could not create EGL context, error 0x%x\n", eglGetError());
+  }
+
+  // make context current, no surface (let OpenGL handle FBO)
+  if (eglMakeCurrent(eglDpy, EGL_NO_SURFACE, EGL_NO_SURFACE, eglCtx)!=EGL_TRUE) {
+    mju_error("Could not make EGL context current, error 0x%x\n", eglGetError());
+  }
+
+  //------------------------ OSMESA
+#elif defined(MJ_OSMESA)
+  // create context
+  ctx = OSMesaCreateContextExt(GL_RGBA, 24, 8, 8, 0);
+  if (!ctx) {
+    mju_error("OSMesa context creation failed");
+  }
+
+  // make current
+  if (!OSMesaMakeCurrent(ctx, buffer, GL_UNSIGNED_BYTE, 800, 800)) {
+    mju_error("OSMesa make current failed");
+  }
+
+  //------------------------ GLFW
+#else
+  // init GLFW
+  if (!glfwInit()) {
+    mju_error("Could not initialize GLFW");
+  }
+
+  // create invisible window, single-buffered
+  glfwWindowHint(GLFW_VISIBLE, 0);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_FALSE);
+  GLFWwindow* window = glfwCreateWindow(800, 800, "Invisible window", NULL, NULL);
+  if (!window) {
+    mju_error("Could not create GLFW window");
+  }
+
+  // make context current
+  glfwMakeContextCurrent(window);
+#endif
+}
+
+// close OpenGL context/window
+void closeOpenGL(void) {
+  //------------------------ EGL
+#if defined(MJ_EGL)
+  // get current display
+  EGLDisplay eglDpy = eglGetCurrentDisplay();
+  if (eglDpy==EGL_NO_DISPLAY) {
+    return;
+  }
+
+  // get current context
+  EGLContext eglCtx = eglGetCurrentContext();
+
+  // release context
+  eglMakeCurrent(eglDpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+
+  // destroy context if valid
+  if (eglCtx!=EGL_NO_CONTEXT) {
+    eglDestroyContext(eglDpy, eglCtx);
+  }
+
+  // terminate display
+  eglTerminate(eglDpy);
+
+  //------------------------ OSMESA
+#elif defined(MJ_OSMESA)
+  OSMesaDestroyContext(ctx);
+
+  //------------------------ GLFW
+#else
+  // terminate GLFW (crashes with Linux NVidia drivers)
+  #if defined(__APPLE__) || defined(_WIN32)
+    glfwTerminate();
+  #endif
+#endif
+}
+
+
+
+
+// void offscreen_rgb (mjModel* model, mjData* data, int argc, const char** argv)
+// {namespace mju = ::mujoco::sample_util;
+  
+//   // parse numeric arguments
+//   double duration = 10, fps = 30;
+//   // std::sscanf(argv[2], "%lf", &duration);
+//   // std::sscanf(argv[3], "%lf", &fps);
+
+//   std::sscanf("5", "%lf", &duration);
+//   std::sscanf("60", "%lf", &fps);
+
+
+// initOpenGL();
+
+//   // glfwWindowHint(GLFW_VISIBLE, 0);
+//   // glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_FALSE);
+//   // GLFWwindow* window = glfwCreateWindow(800, 800, "Invisible window", NULL, NULL);
+//   // if (!window) {
+//   //   mju_error("Could not create GLFW window");
+//   // }
+
+//   // // make context current
+//   // glfwMakeContextCurrent(window);
+//   std::cout<<"offscreen_rgb1"<<std::endl;
+
+
+  
+//   // mjvOption sensor_option;
+//   // mjvPerturb sensor_perturb;
+//   // mjvScene sensor_scene;
+//   // mjrContext offscreen_context;
+
+//   //   mjvCamera rgbd_camera;
+//   // rgbd_camera.type = mjCAMERA_FIXED;
+//   // rgbd_camera.fixedcamid = mj_name2id(model, mjOBJ_CAMERA, "camera");
+
+//   // set rendering to offscreen buffer
+//     std::cout<<"offscreen_rgb2"<<std::endl;
+//   mjr_setBuffer(mjFB_OFFSCREEN, &con);
+  
+//   std::cout<<"offscreen_rgb3"<<std::endl;
+//   if (con.currentBuffer!=mjFB_OFFSCREEN) {
+//     std::printf("Warning: offscreen rendering not supported, using default/window framebuffer\n");
+//   }
+
+//   // get size of active renderbuffer
+//   mjrRect viewport =  mjr_maxViewport(&con);
+//   int W = viewport.width;
+//   int H = viewport.height;
+//   // glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+//   int total = viewport.width*viewport.height;
+//   std::unique_ptr<float []> depth(new float[total]);
+//   std::unique_ptr<unsigned char[]> rgb(new unsigned char[total*3]);
+//     if (!rgb || !depth) {
+//     mju_error("Could not allocate buffers");
+//   }
+
+//   // create output rgb file
+//   std::FILE* fp = std::fopen(argv[4], "wb");
+
+//   if (!fp) {
+//     mju_error("Could not open rgbfile for writing");
+//   }
+  
+
+//  // main loop
+//   double frametime = 0;
+//   int framecount = 0;
+//   std::cout<< "recording" <<std::endl;
+
+//   while (d->time<duration) {
+//     // render new frame if it is time (or first frame)
+//     if ((d->time-frametime)>1/fps || frametime==0) {
+//       // update abstract scene
+//       mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
+
+//       // render scene in offscreen buffer
+//       mjr_render(viewport, &scn, &con);
+
+//       // add time stamp in upper-left corner
+//       char stamp[50];
+//       mju::sprintf_arr(stamp, "Time = %.3f", d->time);
+//       mjr_overlay(mjFONT_NORMAL, mjGRID_TOPLEFT, viewport, stamp, NULL, &con);
+
+//       // read rgb and depth buffers
+      
+//       mjr_readPixels(rgb.get(), depth.get(), viewport, &con);
+
+//       // insert subsampled depth image in lower-left corner of rgb image
+//       const int NS = 3;           // depth image sub-sampling
+//       for (int r=0; r<H; r+=NS)
+//         for (int c=0; c<W; c+=NS) {
+//           int adr = (r/NS)*W + c/NS;
+//           rgb[3*adr] = rgb[3*adr+1] = rgb[3*adr+2] = (unsigned char)((1.0f-depth[r*W+c])*255.0f);
+//         }
+
+//       // write rgb image to file
+//       std::fwrite(rgb.get(), 3, W*H, fp);
+
+//       // print every 10 frames: '.' if ok, 'x' if OpenGL error
+//       if (((framecount++)%10)==0) {
+//         if (mjr_getError()) {
+//           std::printf("x");
+//         } else {
+//           std::printf(".");
+//         }
+//       }
+
+//       // save simulation time
+//       frametime = d->time;
+//     }
+
+//     // advance simulation
+//     mj_step(m, d);
+//   }
+//   std::printf("\n");
+
+//   // close file, free buffers
+//   std::fclose(fp);
+//   std::free(rgb.get());
+//   std::free(depth.get());
+
+//   // close MuJoCo and OpenGL
+//   // closeMuJoCo();
+//   closeOpenGL();
+
+//   // return 1;
+// }
+
+
+
+
+// // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+// // //   GLFWwindow* window = glfwCreateWindow(1200, 800, "Camera_rgb", NULL, NULL);
+// // //   glfwMakeContextCurrent(window);
+// //   glfwSwapInterval(1);
+
+
+// //     // mjv_defaultCamera(&cam2);
+// //   mjvOption sensor_option;
+// //   mjvPerturb sensor_perturb;
+// //   mjvScene sensor_scene;
+// //   mjrContext sensor_context;
+
+// //   mjr_setBuffer(mjFB_OFFSCREEN, &con);
+// //   if (sensor_context.currentBuffer!=mjFB_OFFSCREEN) {
+// //     std::printf("Warning: offscreen rendering not supported, using default/window framebuffer\n");
+// //   }
+
+// //   mjvCamera rgbd_camera;
+// //   rgbd_camera.type = mjCAMERA_FIXED;
+// //   rgbd_camera.fixedcamid = mj_name2id(model, mjOBJ_CAMERA, "camera");
+
+
+// //   mjv_defaultOption(&sensor_option);
+// //   mjv_defaultScene(&sensor_scene);
+// //   mjr_defaultContext(&sensor_context);
+
+// //   // create scene and context
+// //   mjv_makeScene(model, &sensor_scene, 1000);
+// //   mjr_makeContext(model, &sensor_context, mjFONTSCALE_150);
+
+// //   // allocate rgb and depth buffers
+// //   unsigned char* rgb = (unsigned char*)std::malloc(3*W*H);
+// //   float* depth = (float*)std::malloc(sizeof(float)*W*H);
+
+// // //   RGBD_mujoco mj_RGBD;
+// //     // get framebuffer viewport
+// //     mjrRect viewport = {0,0,0,0};
+// //     glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+// //     // int total = viewport.width*viewport.height;
+// //     // std::unique_ptr<float []> depth(new float[total]);
+// //     // std::unique_ptr<unsigned char[]> rgbBuffer(new unsigned char[total*3]);
+
+// //   // create output rgb file
+// //   std::FILE* fp = std::fopen(argv[4], "wb");
+// //   if (!fp) {
+// //     mju_error("Could not open rgbfile for writing");
+// //   }
+
+// //   // main loop
+// //   double frametime = 0;
+// //   int framecount = 0;
+// //   while (d->time<duration) {
+// //     // render new frame if it is time (or first frame)
+// //     if ((d->time-frametime)>1/fps || frametime==0) {
+// //       // update abstract scene
+// //       mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
+
+// //       // render scene in offscreen buffer
+// //       mjr_render(viewport, &scn, &con);
+
+// //       // add time stamp in upper-left corner
+// //       char stamp[50];
+// //       mju::sprintf_arr(stamp, "Time = %.3f", d->time);
+// //       mjr_overlay(mjFONT_NORMAL, mjGRID_TOPLEFT, viewport, stamp, NULL, &con);
+
+// //       // read rgb and depth buffers
+// //       mjr_readPixels(rgb, depth, viewport, &con);
+
+// //       // insert subsampled depth image in lower-left corner of rgb image
+// //       const int NS = 3;           // depth image sub-sampling
+// //       for (int r=0; r<H; r+=NS)
+// //         for (int c=0; c<W; c+=NS) {
+// //           int adr = (r/NS)*W + c/NS;
+// //           rgb[3*adr] = rgb[3*adr+1] = rgb[3*adr+2] = (unsigned char)((1.0f-depth[r*W+c])*255.0f);
+// //         }
+
+// //       // write rgb image to file
+// //       std::fwrite(rgb, 3, W*H, fp);
+
+// //       // print every 10 frames: '.' if ok, 'x' if OpenGL error
+// //       if (((framecount++)%10)==0) {
+// //         if (mjr_getError()) {
+// //           std::printf("x");
+// //         } else {
+// //           std::printf(".");
+// //         }
+// //       }
+
+// //       // save simulation time
+// //       frametime = d->time;
+// //     }
+
+// //     // advance simulation
+// //     mj_step(m, d);
+// //   }
+// //   std::printf("\n");
+
+// //   // close file, free buffers
+// //   std::fclose(fp);
+// //   std::free(rgb);
+// //   std::free(depth);
+
+
+// //   mjv_freeScene(&sensor_scene);
+// //   mjr_freeContext(&sensor_context);
+
+// // }
+
+void offscreen_rgb (mjModel* model, mjData* data, int argc, const char** argv)
+{namespace mju = ::mujoco::sample_util;
+
+ glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+  // GLFWwindow* window = glfwCreateWindow(1200, 800, "Camera_rgb", NULL, NULL);
+  // glfwMakeContextCurrent(window);
+  // glfwSwapInterval(1);
+
+
+    // mjv_defaultCamera(&cam2);
+  mjvOption sensor_option;
+  mjvPerturb sensor_perturb;
+  mjvScene sensor_scene;
+  mjrContext context;
+
+
+
+  mjvCamera rgbd_camera;
+  rgbd_camera.type = mjCAMERA_FIXED;
+  rgbd_camera.fixedcamid = mj_name2id(model, mjOBJ_CAMERA, "camera");
+
+
+  mjv_defaultOption(&sensor_option);
+  mjv_defaultScene(&sensor_scene);
+  mjr_defaultContext(&context);
+
+  // create scene and context
+  mjv_makeScene(model, &sensor_scene, 1000);
+  mjr_makeContext(model, &context, mjFONTSCALE_150);
+
+
+//   RGBD_mujoco mj_RGBD;
+    // get framebuffer viewport
+      // set rendering to offscreen buffer
+  mjr_setBuffer(mjFB_OFFSCREEN, &context);
+  if (context.currentBuffer!=mjFB_OFFSCREEN) {
+    std::printf("Warning: offscreen rendering not supported, using default/window framebuffer\n");
+  }
+    mjrRect viewport =  mjr_maxViewport(&con);
+    int W = viewport.width;
+    int H = viewport.height;
+
+    // glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+    int total = viewport.width*viewport.height;
+    std::unique_ptr<float []> depth(new float[total]);
+    std::unique_ptr<unsigned char[]> rgb(new unsigned char[total*3]);
+  // parse numeric arguments
+  double duration = 10, fps = 30;
+  // std::sscanf(argv[2], "%lf", &duration);
+  // std::sscanf(argv[3], "%lf", &fps);
+
+  std::sscanf("5", "%lf", &duration);
+  std::sscanf("60", "%lf", &fps);
+  // create output rgb file
+  std::FILE* fp = std::fopen(argv[4], "wb");
+  if (!fp) {
+    mju_error("Could not open rgbfile for writing");
+  }
+
+  // main loop
+  double frametime = 0;
+  int framecount = 0;
+  while (d->time<duration)
+  {
+    
+    mjv_updateScene(model, data, &sensor_option, NULL, &rgbd_camera, mjCAT_ALL, &sensor_scene);
+    mjr_render(viewport, &sensor_scene, &context);
+
+      // add time stamp in upper-left corner
+      char stamp[50];
+      mju::sprintf_arr(stamp, "Time = %.3f", d->time);
+      mjr_overlay(mjFONT_NORMAL, mjGRID_TOPLEFT, viewport, stamp, NULL, &context);
+
+
+
+  mjr_readPixels(rgb.get(), nullptr, viewport, &context);
+      // insert subsampled depth image in lower-left corner of rgb image
+      const int NS = 3;           // depth image sub-sampling
+      for (int r=0; r<H; r+=NS)
+        for (int c=0; c<W; c+=NS) {
+          int adr = (r/NS)*W + c/NS;
+          rgb[3*adr] = rgb[3*adr+1] = rgb[3*adr+2] = (unsigned char)((1.0f-depth[r*W+c])*255.0f);
+        }
+      // write rgb image to file
+      std::fwrite(rgb.get(), 3, W*H, fp);
+
+      // print every 10 frames: '.' if ok, 'x' if OpenGL error
+      if (((framecount++)%10)==0) {
+        if (mjr_getError()) {
+          std::printf("x");
+        } else {
+          std::printf(".");
+        }
+      }
+
+            // save simulation time
+      frametime = d->time;
+  // mjr_drawPixels(rgb.get(),nullptr, viewport, &sensor_context);
+
+    // glfwSwapBuffers(window);
 
     // process pending GUI events, call GLFW callbacks
     glfwPollEvents();
@@ -556,21 +1051,31 @@ float near = model->vis.map.znear * extent;
   }
 
   mjv_freeScene(&sensor_scene);
-  mjr_freeContext(&sensor_context);
+  mjr_freeContext(&context);
+
 
 }
+
 void second_view (mjModel* model, mjData* data, int argc, const char** argv)
 {
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-  GLFWwindow* window = glfwCreateWindow(1200, 800, "Camera", NULL, NULL);
+ glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  GLFWwindow* window = glfwCreateWindow(1200, 800, "Camera_rgb", NULL, NULL);
   glfwMakeContextCurrent(window);
   glfwSwapInterval(1);
 
 
+    // mjv_defaultCamera(&cam2);
   mjvOption sensor_option;
   mjvPerturb sensor_perturb;
   mjvScene sensor_scene;
   mjrContext sensor_context;
+
+
+
+  mjvCamera rgbd_camera;
+  rgbd_camera.type = mjCAMERA_FIXED;
+  rgbd_camera.fixedcamid = mj_name2id(model, mjOBJ_CAMERA, "camera");
+
 
   mjv_defaultOption(&sensor_option);
   mjv_defaultScene(&sensor_scene);
@@ -580,26 +1085,51 @@ void second_view (mjModel* model, mjData* data, int argc, const char** argv)
   mjv_makeScene(model, &sensor_scene, 1000);
   mjr_makeContext(model, &sensor_context, mjFONTSCALE_150);
 
-    // install GLFW mouse and keyboard callbacks
-    glfwSetKeyCallback(window, keyboard);
-    glfwSetCursorPosCallback(window, mouse_move);
-    glfwSetMouseButtonCallback(window, mouse_button);
-    glfwSetScrollCallback(window, scroll);
 
-//   Glfw rendering
+//   RGBD_mujoco mj_RGBD;
+    // get framebuffer viewport
+    mjrRect viewport =  mjr_maxViewport(&con);
+    int W = viewport.width;
+    int H = viewport.height;
+
+    glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+    int total = viewport.width*viewport.height;
+    std::unique_ptr<float []> depth(new float[total]);
+    std::unique_ptr<unsigned char[]> rgbBuffer(new unsigned char[total*3]);
+
+  double duration = 10, fps = 30;
+  // create output rgb file
+  std::FILE* fp = std::fopen(argv[4], "wb");
+  if (!fp) {
+    mju_error("Could not open rgbfile for writing");
+  }
+
+  double frametime = 0;
+  int framecount = 0;
+  namespace mju = ::mujoco::sample_util;  
   while (!glfwWindowShouldClose(window))
   {
-    // get framebuffer viewport
-    mjrRect viewport = {0,0,0,0};
-    glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
-    
+        // render new frame if it is time (or first frame)
+    if ((d->time-frametime)>1/fps || frametime==0) {
 
-    mjv_updateScene(model, data, &sensor_option, NULL, &cam, mjCAT_ALL, &sensor_scene);
+    mjv_updateScene(model, data, &sensor_option, NULL, &rgbd_camera, mjCAT_ALL, &sensor_scene);
     mjr_render(viewport, &sensor_scene, &sensor_context);
+    
+    // add time stamp in upper-left corner
+    char stamp[50];
+    mju::sprintf_arr(stamp, "Time = %.3f", d->time);
+    mjr_overlay(mjFONT_NORMAL, mjGRID_TOPLEFT, viewport, stamp, NULL, &sensor_context);
 
+    mjr_readPixels(rgbBuffer.get(), nullptr, viewport, &sensor_context);
+
+    // write rgb image to file
+    std::fwrite(rgbBuffer.get(), 3, W*H, fp);
+
+
+    mjr_drawPixels(rgbBuffer.get(),nullptr, viewport, &sensor_context);
 
     glfwSwapBuffers(window);
-
+    }
     // process pending GUI events, call GLFW callbacks
     glfwPollEvents();
         std::this_thread::sleep_for(std::chrono::milliseconds(30));
@@ -615,7 +1145,7 @@ void second_view (mjModel* model, mjData* data, int argc, const char** argv)
 int main(int argc, const char** argv)
 {
     // check command-line arguments
-    if( argc!=2 )
+    if( argc=0 )
     {
         printf(" No arguments passed. Loading model...\n");
         //return 0;
@@ -632,6 +1162,8 @@ int main(int argc, const char** argv)
         else
             m = mj_loadXML(argv[1], 0, error, 1000);
     }
+
+
     if( !m )
         mju_error_s("Load model error: %s", error);
 
@@ -646,11 +1178,13 @@ int main(int argc, const char** argv)
  // calling thread form simulaiton and depth camera       
   std::thread simulation_thread(simulation, m, d,argc, argv);
     // std::thread view_thread(second_view, m, d,argc, argv);
-    // std::thread depth_thread(depth_show, m, d,argc, argv);
+    std::thread depth_thread(depth_show, m, d,argc, argv);
+    // std::thread offscreen_thread(offscreen_rgb, m, d,argc, argv);
 
   simulation_thread.join();
-//   view_thread.join();
-    // depth_thread.join();
+  // view_thread.join();
+    depth_thread.join();
+    // offscreen_thread.join();
 
 
     
