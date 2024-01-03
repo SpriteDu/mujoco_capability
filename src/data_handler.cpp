@@ -58,31 +58,78 @@ void DataHandler::record_data(const mjModel* m, mjData* d, double* current_time)
     outputFile.close();
 }
 
-
-void DataHandler::record_contact(const mjModel* m, mjData* d){
+/**
+ * @brief Record contact data to a CSV file.
+ * 
+ * The data includes simulation time, contact name, and contact force.
+ * 
+ * @param m Pointer to the MuJoCo model (mjModel).
+ * @param d Pointer to the MuJoCo data (mjData), used for getting the simulation time.
+ * @param contactF Pointer to an array containing contact force data.
+ * @param name Name of the contact point (obtained from MuJoCo).
+ */
+void DataHandler::record_contact(const mjModel* m, mjData* d,const mjtNum* contactF,int ID){
     std::ofstream outputFile(file_name + ".csv", std::ios::app);
+    
     if (!outputFile.is_open()) {
         std::cerr << "Failed to open the file." << std::endl;
-        return; // Return early if the file couldn't be opened.
     }
+    // for (int i = 0; i <=6; ++i) {
+        
+    //     if (i < 5) { // Avoid adding a comma after the last element
+    //     outputFile << contactF[i];
+    //     outputFile << ",";
+    //     }
+    //     else outputFile << "\n";
+    //     return; // Return early if the file couldn't be opened.
+    // }
+
+outputFile << d->time << "," << mj_id2name(m,mjOBJ_BODY,ID) << ",";
+for (int i = 0; i < 6; ++i) {
+    outputFile << contactF[i];
+    if (i < 5) { // Add a comma after each element except the last
+        outputFile << ",";
+    }
+}
+
+outputFile << "\n"; // Add a newline after writing all elements
 
     // Write d->ctrl array
     // outputFile << "Index,Contact geom1,geom2,PosX,PosY,PosZ,tangent1, 2, spin, roll1, 2,Mu\n";
     // outputFile << "Index,Contact_thumb,index,middle,ring,little\n";
     // Iterate over the contacts and write their data
 
+        // for (int i = 0; i < d->ncon; i++) { //loop over all contacts. 
+        // int body1 = m->geom_bodyid[d->contact[i].geom1];
+        // int body2 = m->geom_bodyid[d->contact[i].geom2];
+        // std::cout <<" body 1:  " << body1 << ". body 2:  " <<body2 << " objectID " << objectID << " indexTipID " << indexTipID << std::endl;
 
+        // if (body1 == objectID || body2 == objectID)
+        // {
+        //     body1 == objectID ? fingerID = body2 : fingerID = body1;
+        //     if (fingerID = indexTipID) { 
+        //         // std::cout << "index" << std::endl;
+        //         mj_contactForce(m, d, i, tip_index_force);
+        //         tip_index_ncon++;
+        //         std::cout << "Contact Force as a Vector: ["
+        //             << tip_index_force[0] << ", "
+        //             << tip_index_force[1] << ", "
+        //             << tip_index_force[2] << "]" << " Number " << tip_index_ncon << std::endl;        
+    
+        //     }
 
+        // }
+            
+        // }
 
-
-    for (int i = 0; i < m->nsensordata; ++i) {
-    outputFile << d->sensordata[i];
-    if (i < m->nsensordata - 1) {
-        outputFile << ";";
-    } else {
-        outputFile << "\n";
-    }
-        }
+    // for (int i = 0; i < m->nsensordata; ++i) {
+    // outputFile << d->sensordata[i];
+    // if (i < m->nsensordata - 1) {
+    //     outputFile << ";";
+    // } else {
+    //     outputFile << "\n";
+    // }
+    //     }
 
         //  mjContact* contact = &d->contact[i];
         // //record index
@@ -107,7 +154,20 @@ void DataHandler::record_contact(const mjModel* m, mjData* d){
 
 }
 
+double DataHandler::getElement(size_t index) const {
+    if (index < 6) {
+        return tip_index_force_ptr[index];
+    }
+    throw std::out_of_range("Index out of range");
+}
 
+void DataHandler::setElement(size_t index, double value) {
+    if (index < 6) {
+        tip_index_force_ptr[index] = value;
+        return;
+    }
+    throw std::out_of_range("Index out of range");
+}
 
 #include <fstream>
 #include <vector>

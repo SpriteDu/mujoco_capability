@@ -309,22 +309,23 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
         ref[i] = ik_sol.q_sol[i];
 
     // run main loop, target real-time simulation and 60 fps rendering
-
+    double fps = 60.0;
+    std::sscanf(argv[3], "%lf", &fps);
 
     // get framebuffer viewport
-    mjrRect viewport = {0, 0, 0, 0};
+    mjrRect viewport =  mjr_maxViewport(&con);
     glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
     //mjcb_control = controlLaw;              // initialize a control law    
 
     double desired_real_time_factor = 1.0;  // Adjust this factor as needed
-    double normal_dt = 1.0 / 60.0;  // 
+    double normal_dt = 1.0 / fps;  // 
     double dt = normal_dt / desired_real_time_factor; // 60 Hz for control system and rendering
     // m->opt.timestep = dt;  // the integral time in each step. should align with the step size defined earlier. 
     cout<<"the intergal time is " << model->opt.timestep<< endl;
     
 
     // for P controller the calling frequency influence the controled behavior
-    double controlSystem_dt = 1.0 / 60.0;  
+    double controlSystem_dt = 1.0 / 100.0;  
     double lastControlUpdateTime = 0.0;
     // mjcb_control = pcontroller;
     mjtNum start_time = data->time;;
@@ -332,14 +333,13 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
     DataHandler datahandler;
     datahandler.openData();
 
-    const char* objectName = "Small_Proximal";
+    const char* objectName = "Multi_shaped_object";
     int objectID = mj_name2id(m, mjOBJ_BODY, objectName);
-    const char* fingerTipName = "Middle_Distal--Middle_Middle";
-    const int indexTipID = mj_name2id(m, mjOBJ_JOINT, fingerTipName);
     mjtNum tip_index_force[6];
     int tip_index_ncon{0};
     int object_ncon{0};
     int bodyID{-1};
+    int fingerID{-1};
     
     const char* tableName = "Table";
     const int tableID = mj_name2id(m, mjOBJ_BODY, tableName);
@@ -355,67 +355,40 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
         mjtNum simstart = data->time;
         
         // while last step is finished and a frame is rendered,, keep do the simulation without re-rendering.
-        while (data->time - simstart < dt) {
+        while (data->time - simstart < controlSystem_dt) {
         mj_step(model, data);
         }
 
-        for (int i = 0; i < d->ncon; i++) {//loop over all contacts. 
-            // std::cout<< "index:" <<i << "\n";
-                int body1 = m->geom_bodyid[d->contact[i].geom1];
-                int body2 = m->geom_bodyid[d->contact[i].geom2];
-            // std::cout<< objectID << " ";
-            // std::cout<< body1 <<" ";
-            // std::cout<< body2 << "\n";
+        for (int i = 0; i < d->ncon; i++) { //loop over all contacts. 
+            int body1 = m->geom_bodyid[d->contact[i].geom1];
+            int body2 = m->geom_bodyid[d->contact[i].geom2];
 
+        if (body1 == objectID || body2 == objectID)
+        {
+            body1 == objectID ? fingerID = body2 : fingerID = body1; // other objcet that have contact with object.
 
-            if (body1 == objectID || body2 == objectID) { 
-                
-                object_ncon++;
+            if ( fingerID == tableID) 
+            break; // not recording the normal force from table. 
+            else { // recording other contact, perhaps with hand
+                // std::cout << "index" << std::endl;
+                mj_contactForce(m, d, i, tip_index_force); 
+                //Extract 6D force:torque given contact id, in the contact frame.
+                tip_index_ncon++;
+                // Write contents to the file, the contact force.
+                datahandler.record_contact(m,d, tip_index_force, fingerID);
 
-                body1 == objectID ? bodyID = body2 : bodyID = body1; // Corrected assignment operator
-                // First, try only focus on the finger tip, also count the number of contacts on each body
-                // Index finger 
-                // std::cout<< "bodyID is " <<bodyID <<"and indexTipID is " << indexTipID <<std::endl;
-                if (bodyID == indexTipID) {
-                    mj_contactForce(m, d, i, tip_index_force);
-                    tip_index_ncon++;
-                    std::cout << "Contact Force as a Vector: ["
-                        << tip_index_force[0] << ", "
-                        << tip_index_force[1] << ", "
-                        << tip_index_force[2] << "]" << " Number " << tip_index_ncon << std::endl;
+                // std::cout << "Contact Force as a Vector: ["
+                //     << tip_index_force[0] << ", "
+                //     << tip_index_force[1] << ", "
+                //     << tip_index_force[2] << "]" << " Number " << tip_index_ncon << std::endl; 
                 }
 
-                std::cout<<"ID of table is " << tableID << " body is" << bodyID <<std::endl;
-                if (bodyID == tableID){
-                    mj_contactForce(m, d, i, tip_index_force);
-                    table_ncon++;
-                    std::cout << "Contact Force with the table as a Vector: ["
-                        << tip_index_force[0] << ", "
-                        << tip_index_force[1] << ", "
-                        << tip_index_force[2] << "]" << " Number " << table_ncon << std::endl;
-                }
+
+       
+    
             }
-        }
 
-
-
-        //         switch (bodyID) {
-        //             case indexTipID:
-        //                 mj_contactForce(m, d, i, tip_index_force);
-        //                 tip_index_ncon++;
-        //                 std::cout << "Contact Force as a Vector: ["
-        //                         << tip_index_force[0] << ", "
-        //                         << tip_index_force[1] << ", "
-        //                         << tip_index_force[2] << "]" << " Number " << tip_index_ncon << std::endl;
-        //                 break;
-        //             default:
-        //                 break;
-        //         }
-        //     }
-        // }
-
-
-        
+        } //end of for loop, checking every contact force.
 
         mjtNum elapsed_time = data->time - start_time;//set after the while loop to decrease the influence from.
         //steady the calling frequency of controllSystem.
@@ -424,31 +397,9 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
             // mj_step(m,d);
             // mj_step1(m, d);
             stage = controlSystem(model, data, ref, stage);
-            datahandler.record_contact(model,data);
-            // std::cout<<m->nsensordata<<std::endl;
-
-            // for (int i = 0; i < m->nsensordata; ++i) {
-            //     std::cout<<data->sensordata[i]<<std::endl;
-            //     }
-
 
     //         for (int i = 0; i < d->ncon; ++i) {
     // mjContact* contact = &d->contact[i];
-    
-    // Example of printing contact position (assuming mjContact has these fields)
-    // std::cout << "Contact " << i << ": Position = ("
-    //           << contact->pos[0] << ", "
-    //           << contact->pos[1] << ", "
-    //           << contact->pos[2] << ")\n"
-    //           <<  contact->friction[0] << endl;
-
-             
- 
-
-
-       
-        
-
 
         // get framebuffer viewport
         mjrRect viewport = {0, 0, 0, 0};
@@ -473,6 +424,7 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
 
 
 }
+
 void depth_show (mjModel* model, mjData* data,int argc, const char** argv)
 {
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
@@ -511,7 +463,7 @@ void depth_show (mjModel* model, mjData* data,int argc, const char** argv)
 //   RGBD_mujoco mj_RGBD;
     // get framebuffer viewport
     // mjrRect viewport = {0,0,0,0};
-    mjrRect viewport =  mjr_maxViewport(&con);
+    mjrRect viewport =  mjr_maxViewport(&sensor_context);
         int W = viewport.width;
     int H = viewport.height;
 
@@ -521,6 +473,7 @@ void depth_show (mjModel* model, mjData* data,int argc, const char** argv)
     std::unique_ptr<unsigned char[]> depth8(new unsigned char[3*viewport.width*viewport.height]);
 
   double duration = 10, fps = 30;
+  std::sscanf(argv[3], "%lf", &fps);
   // create output rgb file
   std::FILE* fp = std::fopen(argv[5], "wb");
   if (!fp) {
@@ -535,7 +488,7 @@ void depth_show (mjModel* model, mjData* data,int argc, const char** argv)
   while (!glfwWindowShouldClose(window))
   {
 
-    if ((d->time-frametime)>1/fps || frametime==0) {
+    // if ((d->time-frametime)>1/fps || frametime==0) {
     mjv_updateScene(model, data, &sensor_option, NULL, &rgbd_camera, mjCAT_ALL, &sensor_scene);
     mjr_render(viewport, &sensor_scene, &sensor_context);
 
@@ -568,7 +521,8 @@ void depth_show (mjModel* model, mjData* data,int argc, const char** argv)
     glfwPollEvents();
         std::this_thread::sleep_for(std::chrono::milliseconds(30));
 
-  }
+  // } end of if, frequenze of rendering. comment because, the render frequeze 
+  //is defined inthe simulation loop(doubt), through controw the glbw updating.
   }
 
   mjv_freeScene(&sensor_scene);
@@ -619,6 +573,7 @@ void second_view (mjModel* model, mjData* data, int argc, const char** argv)
     std::unique_ptr<unsigned char[]> rgbBuffer(new unsigned char[total*3]);
 
   double duration = 10, fps = 30;
+  std::sscanf(argv[3], "%lf", &fps);
   // create output rgb file
   std::FILE* fp = std::fopen(argv[4], "wb");
   if (!fp) {
@@ -699,12 +654,12 @@ int main(int argc, const char** argv)
  // calling thread form simulaiton and depth camera       
   std::thread simulation_thread(simulation, m, d,argc, argv);
     // std::thread view_thread(second_view, m, d,argc, argv);
-    std::thread depth_thread(depth_show, m, d,argc, argv);
+    // std::thread depth_thread(depth_show, m, d,argc, argv);
     // std::thread offscreen_thread(offscreen_rgb, m, d,argc, argv);
 
   simulation_thread.join();
-  // view_thread.join();
-    depth_thread.join();
+    // view_thread.join();
+    // depth_thread.join();
     // offscreen_thread.join();
 
 
