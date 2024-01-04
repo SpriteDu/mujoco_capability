@@ -103,7 +103,7 @@ void scroll(GLFWwindow* window, double xoffset, double yoffset)
     mjv_moveCamera(m, mjMOUSE_ZOOM, 0, -0.05*yoffset, &scn, &cam);
 }
 
-int controlSystem(const mjModel* m, mjData* d, double ref[], int stage)
+int controlSystem(const mjModel* m, mjData* d, double ref[], int stage) 
 {
     int n_joints = m->nu;
     float kp = 0.013f;
@@ -140,8 +140,8 @@ int controlSystem(const mjModel* m, mjData* d, double ref[], int stage)
     case 1:{ // catch the object
         // std::cout <<"stage 1 " <<std::endl;
         int finger_joint_at_position = 0;
-        for (int i = 11; i < n_joints; i++){
-            err = 0.7 - d->qpos[i];
+        for (int i = 11; i < n_joints; i+=3){
+            err = 0.83 - d->qpos[i];
             d->ctrl[i] = d->ctrl[i] + kp*(err);
 
             // std::cout<< err << std::endl;
@@ -152,9 +152,16 @@ int controlSystem(const mjModel* m, mjData* d, double ref[], int stage)
             }
 
         }
-        if (finger_joint_at_position >= 5){
-                stage = 2;
+        // std::cout <<finger_joint_at_position<<std::endl;
+
+
+        if (finger_joint_at_position >= 2){ // enforce the grip 
+            for (int i = 11; i < n_joints; i+=3){
+                err = 1 - d->qpos[i];
+                d->ctrl[i] = 1.2;
             }
+                stage = 2;
+         }
         break;
     }
    
@@ -166,7 +173,7 @@ int controlSystem(const mjModel* m, mjData* d, double ref[], int stage)
         d->ctrl[i] = d->ctrl[i] + kp*(err);
 
         err = 3 - d->qpos[6];
-         d->qpos[6] = d->ctrl[6] + kp*(err);
+         d->qpos[6] = d->ctrl[6] + kp*0.01*(err); // slower the lifting
         break;
     }
         
@@ -223,7 +230,7 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
     mjv_defaultOption(&opt);
     opt.flags[mjVIS_CONTACTFORCE] = 1;
     // opt.flags[mjVIS_CONTACTSPLIT] = true;
-    std::cout<<opt.flags[mjVIS_CONTACTFORCE]<<"true"<<std::endl;
+    // std::cout<<opt.flags[mjVIS_CONTACTFORCE]<<"true"<<std::endl;
     mjv_defaultScene(&scn);
     mjr_defaultContext(&con);
 
@@ -359,40 +366,39 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
         mj_step(model, data);
         }
 
-        for (int i = 0; i < d->ncon; i++) { //loop over all contacts. 
+        // get contact force 
+        for (int i = 0; i < d->ncon; i++)  //loop over all contacts.
+        {  
             int body1 = m->geom_bodyid[d->contact[i].geom1];
             int body2 = m->geom_bodyid[d->contact[i].geom2];
 
-        if (body1 == objectID || body2 == objectID)
-        {
-            body1 == objectID ? fingerID = body2 : fingerID = body1; // other objcet that have contact with object.
+            if (body1 == objectID || body2 == objectID)
+            {
+                body1 == objectID ? fingerID = body2 : fingerID = body1; // other objcet that have contact with object.
 
-            if ( fingerID == tableID) 
-            break; // not recording the normal force from table. 
-            else { // recording other contact, perhaps with hand
-                // std::cout << "index" << std::endl;
-                mj_contactForce(m, d, i, tip_index_force); 
-                //Extract 6D force:torque given contact id, in the contact frame.
-                tip_index_ncon++;
-                // Write contents to the file, the contact force.
-                datahandler.record_contact(m,d, tip_index_force, fingerID);
+                if ( fingerID == tableID) 
+                break; // not recording the normal force from table. 
+                else 
+                { // recording other contact, perhaps with hand
+                    // std::cout << "index" << std::endl;
+                    mj_contactForce(m, d, i, tip_index_force); 
+                    //Extract 6D force:torque given contact id, in the contact frame.
+                    tip_index_ncon++;
+                    // Write contents to the file, the contact force.
+                    datahandler.record_contact(m,d, tip_index_force, fingerID);
 
-                // std::cout << "Contact Force as a Vector: ["
-                //     << tip_index_force[0] << ", "
-                //     << tip_index_force[1] << ", "
-                //     << tip_index_force[2] << "]" << " Number " << tip_index_ncon << std::endl; 
+                    // std::cout << "Contact Force as a Vector: ["
+                    //     << tip_index_force[0] << ", "
+                    //     << tip_index_force[1] << ", "
+                    //     << tip_index_force[2] << "]" << " Number " << tip_index_ncon << std::endl; 
                 }
-
-
-       
-    
             }
 
         } //end of for loop, checking every contact force.
 
-        mjtNum elapsed_time = data->time - start_time;//set after the while loop to decrease the influence from.
+        // mjtNum elapsed_time = data->time - start_time;//set after the while loop to decrease the influence from.
         //steady the calling frequency of controllSystem.
-        if (elapsed_time - lastControlUpdateTime >= controlSystem_dt){
+        // if (elapsed_time - lastControlUpdateTime >= controlSystem_dt){
             
             // mj_step(m,d);
             // mj_step1(m, d);
@@ -402,8 +408,7 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
     // mjContact* contact = &d->contact[i];
 
         // get framebuffer viewport
-        mjrRect viewport = {0, 0, 0, 0};
-        glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+
 
         // update scene and render
         mjv_updateScene(model, data, &opt, NULL, &cam, mjCAT_ALL, &scn);
@@ -414,7 +419,7 @@ void simulation (mjModel* model, mjData* data, int argc, const char** argv)
 
         // process pending GUI events, call GLFW callbacks
         glfwPollEvents();
-        }
+        // }
     
     } // end simulation
 
