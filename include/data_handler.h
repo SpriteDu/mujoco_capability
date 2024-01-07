@@ -5,31 +5,51 @@
 #include <fstream>
 #include <iomanip>
 #include <ostream>
-
-
-class DataHandler {
+/**
+ * Class DataHandler
+ *
+ * This class is responsible for handling data recording for a MuJoCo simulation.
+ */
+class DataHandler
+{
 public:
-    DataHandler(const std::string& file_name = "New_Record", double* current_time = nullptr);
+    /**
+     * Constructor for DataHandler.
+     *
+     * @param file_name The name of the file to which data will be recorded.
+     *                  Defaults to "New_Record".
+     * @param current_time Pointer to a double representing the current simulation time.
+     *                     This can be used to timestamp the recorded data.
+     */
+    DataHandler(const std::string &file_name = "New_Record", double *current_time = nullptr);
+
+    /**
+     * Opens the data file for recording.
+     * This method should be called before any data recording begins.
+     */
     void openData();
-    void record_data(const mjModel* m, mjData* d, double* current_time);
-    void record_contact(const mjModel* m, mjData* d,const mjtNum* contactF, int ID);
-    double getElement(size_t index) const;
-    void setElement(size_t index, double value);
+
+    /**
+     * Records general data from the simulation.
+     *
+     * @param m Pointer to the MuJoCo model (mjModel).
+     * @param d Pointer to the MuJoCo data (mjData), used for getting general simulation data.
+     * @param current_time Pointer to the current simulation time.
+     */
+    void record_data(const mjModel *m, mjData *d, double *current_time);
+
+    /**
+     * Records contact force data for a specific contact ID.
+     *
+     * @param m Pointer to the MuJoCo model (mjModel).
+     * @param d Pointer to the MuJoCo data (mjData), used for getting contact force data.
+     * @param contactF Pointer to an array containing contact force data.
+     * @param ID The ID of the contact point to record data for.
+     */
+    void record_contact(const mjModel *m, mjData *d, const mjtNum *contactF, int ID);
+
 private:
     std::string file_name;
-    double* current_time;
+    double *current_time;
     std::unique_ptr<double[]> tip_index_force_ptr;
-    // const char* objectName = "Multi_shaped_object";
-    // int objectID = mj_name2id(m, mjOBJ_BODY, objectName);
-    // const char* fingerTipName = "Index_Distal";
-    // const int indexTipID = mj_name2id(m, mjOBJ_BODY, fingerTipName);
-    // mjtNum tip_index_force[6];
-    // int tip_index_ncon{0};
-    // int object_ncon{0};
-    // int bodyID{-1};
-    // int fingerID{-1};
-    
-    // const char* tableName = "Table";
-    // const int tableID = mj_name2id(m, mjOBJ_BODY, tableName);
-    // int table_ncon{0};
 };
