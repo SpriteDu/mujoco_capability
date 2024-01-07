@@ -22,7 +22,15 @@
         <include file="table.xml"/>
         <include file="object.xml"/>
         <include file="camera.xml"/>
+        <!-- <include file="clip.xml"/> -->
   </worldbody>  
+
+  <contact>
+    <exclude name = "exclude_forearm_palm" body1="palm" body2="Thumb_Methacarpal" />
+    <exclude name = "exclude_palm_forearm" body1="palm" body2="forearm:1"  />
+
+    Thumb_Methacarpal
+  </contact>
 
   <keyframe>
     <!-- <key name="home" qpos="0 0 0 -1.57079 0 1.57079 -0.7853 0.04 0.04" ctrl="0 0 0 -1.57079 0 1.57079 -0.7853 255"/> -->
