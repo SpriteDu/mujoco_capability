@@ -15,7 +15,7 @@ find_package(Threads REQUIRED)
 
 LINK_LIBRARIES(${CMAKE_SOURCE_DIR}/../../lib)
 
-add_executable(${PROJECT_NAME} main_panda_RH8D.cpp src/data_handler.cpp src/controller.cpp)
+add_executable(${PROJECT_NAME} main_panda_RH8D.cpp src/data_handler.cpp src/controller.cpp src/ControlSystem.cpp)
 #find_package(MUJOCO_LIB NAMES mujoco PATHS /home/jididu/Documents/mujoco-2.3.7/lib)
 
 #add_library(mylib src/add.cpp src/sub.cpp)
