@@ -38,7 +38,7 @@ double lastx = 0;
 double lasty = 0;
 
 char filename[] = "../franka_panda_RH8D_R.xml";
-int stage = 0; // flag to tell which stage it is right now. Gloabl
+int stage = 0; // flag to for control stage. Gloabl
 // keyboard callback
 void keyboard(GLFWwindow *window, int key, int scancode, int act, int mods)
 {
@@ -241,8 +241,6 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
     for (int i = 0; i < 7; i++)
         ref[i] = ik_sol.q_sol[i];
 
-    
-
     // run main loop, target real-time simulation and 60 fps rendering
     double fps = 60.0;
     std::sscanf(argv[3], "%lf", &fps);
@@ -263,8 +261,7 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
     double lastControlUpdateTime = 0.0;
     // mjcb_control = pcontroller;
     mjtNum start_time = data->time;
-    ;
-    
+
     DataHandler datahandler;
     datahandler.openData();
 
@@ -318,7 +315,6 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
         // mjtNum elapsed_time = data->time - start_time;//set after the while loop to decrease the influence from.
         // steady the calling frequency of controllSystem.
         // if (elapsed_time - lastControlUpdateTime >= controlSystem_dt){
-
 
         stage = controlSystem.update(data, ref, stage);
 
@@ -398,46 +394,47 @@ void depth_show(mjModel *model, mjData *data, int argc, const char **argv)
     double frametime = 0;
     int framecount = 0;
     namespace mju = ::mujoco::sample_util;
-
     while (!glfwWindowShouldClose(window))
     {
-
-        // if ((d->time-frametime)>1/fps || frametime==0) {
-        mjv_updateScene(model, data, &sensor_option, NULL, &rgbd_camera, mjCAT_ALL, &sensor_scene);
-        mjr_render(viewport, &sensor_scene, &sensor_context);
-
-        // mjr_readPixels(nullptr, depth.get(), viewport, &sensor_context);
-
-        // convert to meters
-        float extent = model->stat.extent;
-        float near = model->vis.map.znear * extent;
-        float far = model->vis.map.zfar * extent;
-        for (int i = 0; i < total; ++i)
+        if ((d->time - frametime) > 1 / fps || frametime == 0)
         {
-            depth[i] = near / (1.0f - depth[i] * (1.0f - near / far));
+            // if ((d->time-frametime)>1/fps || frametime==0) {
+            mjv_updateScene(model, data, &sensor_option, NULL, &rgbd_camera, mjCAT_ALL, &sensor_scene);
+            mjr_render(viewport, &sensor_scene, &sensor_context);
+
+            // mjr_readPixels(nullptr, depth.get(), viewport, &sensor_context);
+
+            // convert to meters
+            float extent = model->stat.extent;
+            float near = model->vis.map.znear * extent;
+            float far = model->vis.map.zfar * extent;
+            for (int i = 0; i < total; ++i)
+            {
+                depth[i] = near / (1.0f - depth[i] * (1.0f - near / far));
+            }
+
+            // convert to a 3-channel 8-bit image
+            mjr_readPixels(nullptr, depth.get(), viewport, &sensor_context);
+            for (int i = 0; i < viewport.width * viewport.height; i++)
+            {
+                depth8[3 * i] = depth8[3 * i + 1] = depth8[3 * i + 2] = depth[i] * 255;
+            }
+
+            mjr_drawPixels(depth8.get(), nullptr, viewport, &sensor_context);
+            // add time stamp in upper-left corner
+            char stamp[50];
+            mju::sprintf_arr(stamp, "Time = %.3f", d->time);
+            mjr_overlay(mjFONT_NORMAL, mjGRID_TOPLEFT, viewport, stamp, NULL, &sensor_context);
+            std::fwrite(depth8.get(), 3, W * H, fp);
+            glfwSwapBuffers(window);
+
+            // process pending GUI events, call GLFW callbacks
+            glfwPollEvents();
+            frametime = d->time;
+
+            // } end of if, frequenze of rendering. comment because, the render frequeze
+            // is defined inthe simulation loop(doubt), through controw the glbw updating.
         }
-
-        // convert to a 3-channel 8-bit image
-        mjr_readPixels(nullptr, depth.get(), viewport, &sensor_context);
-        for (int i = 0; i < viewport.width * viewport.height; i++)
-        {
-            depth8[3 * i] = depth8[3 * i + 1] = depth8[3 * i + 2] = depth[i] * 255;
-        }
-
-        mjr_drawPixels(depth8.get(), nullptr, viewport, &sensor_context);
-        // add time stamp in upper-left corner
-        char stamp[50];
-        mju::sprintf_arr(stamp, "Time = %.3f", d->time);
-        mjr_overlay(mjFONT_NORMAL, mjGRID_TOPLEFT, viewport, stamp, NULL, &sensor_context);
-        std::fwrite(depth8.get(), 3, W * H, fp);
-        glfwSwapBuffers(window);
-
-        // process pending GUI events, call GLFW callbacks
-        glfwPollEvents();
-        std::this_thread::sleep_for(std::chrono::milliseconds(30));
-
-        // } end of if, frequenze of rendering. comment because, the render frequeze
-        // is defined inthe simulation loop(doubt), through controw the glbw updating.
     }
 
     mjv_freeScene(&sensor_scene);
@@ -497,7 +494,6 @@ void second_view(mjModel *model, mjData *data, int argc, const char **argv)
         // render new frame if it is time (or first frame)
         if ((d->time - frametime) > 1 / fps || frametime == 0)
         {
-
             mjv_updateScene(model, data, &sensor_option, NULL, &rgbd_camera, mjCAT_ALL, &sensor_scene);
             mjr_render(viewport, &sensor_scene, &sensor_context);
 
@@ -514,10 +510,10 @@ void second_view(mjModel *model, mjData *data, int argc, const char **argv)
             mjr_drawPixels(rgbBuffer.get(), nullptr, viewport, &sensor_context);
 
             glfwSwapBuffers(window);
+            frametime = d->time;
         }
         // process pending GUI events, call GLFW callbacks
         glfwPollEvents();
-        std::this_thread::sleep_for(std::chrono::milliseconds(30));
     }
 
     mjv_freeScene(&sensor_scene);
@@ -559,8 +555,8 @@ int main(int argc, const char **argv)
         mju_error("Could not initialize GLFW");
     // calling thread form simulaiton and depth camera
     std::thread simulation_thread(simulation, m, d, argc, argv);
-    std::thread view_thread(second_view, m, d,argc, argv);
-    std::thread depth_thread(depth_show, m, d,argc, argv);
+    std::thread view_thread(second_view, m, d, argc, argv);
+    std::thread depth_thread(depth_show, m, d, argc, argv);
     // std::thread offscreen_thread(offscreen_rgb, m, d,argc, argv);
 
     simulation_thread.join();
