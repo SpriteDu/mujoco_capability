@@ -336,10 +336,21 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
     mjr_freeContext(&con);
 }
 
-void depth_show(mjModel *model, mjData *data, int argc, const char **argv)
+void depth_show(mjModel *model, mjData *data, int argc, const char **argv, bool depth_window)
 {
+    int width = 300;  // Default width
+    int height = 300; // Default height
+
+    std::FILE *fp = nullptr; // Declare and initialize fp_depth
+    // std::cout << argc << std::endl;
+    if (argc > 5)
+    {
+        std::cout << "new out \n";
+        width = std::atoi(argv[6]);  // Convert argv[6] to integer and assign to width
+        height = std::atoi(argv[7]); // Convert argv[7] to integer and assign to height
+    }
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-    GLFWwindow *window = glfwCreateWindow(1200, 800, "Camera", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(width, height, "Camera", NULL, NULL);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
@@ -382,10 +393,11 @@ void depth_show(mjModel *model, mjData *data, int argc, const char **argv)
     std::unique_ptr<float[]> depth(new float[total]);
     std::unique_ptr<unsigned char[]> depth8(new unsigned char[3 * viewport.width * viewport.height]);
 
-    double duration = 10, fps = 30;
+    double fps = 30;
     std::sscanf(argv[3], "%lf", &fps);
     // create output rgb file
-    std::FILE *fp = std::fopen(argv[5], "wb");
+
+    fp = std::fopen(argv[5], "wb");
     if (!fp)
     {
         mju_error("Could not open rgbfile for writing");
@@ -425,7 +437,10 @@ void depth_show(mjModel *model, mjData *data, int argc, const char **argv)
             char stamp[50];
             mju::sprintf_arr(stamp, "Time = %.3f", d->time);
             mjr_overlay(mjFONT_NORMAL, mjGRID_TOPLEFT, viewport, stamp, NULL, &sensor_context);
-            std::fwrite(depth8.get(), 3, W * H, fp);
+            if (depth_window)
+            {
+                std::fwrite(depth8.get(), 3, W * H, fp);
+            }
             glfwSwapBuffers(window);
 
             // process pending GUI events, call GLFW callbacks
@@ -441,10 +456,18 @@ void depth_show(mjModel *model, mjData *data, int argc, const char **argv)
     mjr_freeContext(&sensor_context);
 }
 
-void second_view(mjModel *model, mjData *data, int argc, const char **argv)
+void second_view(mjModel *model, mjData *data, int argc, const char **argv, bool depth_window)
 {
+    int width = 300;               // Default width
+    int height = 300;              // Default height
+    std::FILE *fp_depth = nullptr; // Declare and initialize fp_depth
+    if (argc > 5)                  // input window size
+    {
+        width = std::atoi(argv[6]);  // Convert argv[6] to integer and assign to width
+        height = std::atoi(argv[7]); // Convert argv[7] to integer and assign to height
+    }
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-    GLFWwindow *window = glfwCreateWindow(1200, 800, "Camera_rgb", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(width, height, "Camera_rgb", NULL, NULL);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
@@ -454,7 +477,7 @@ void second_view(mjModel *model, mjData *data, int argc, const char **argv)
     mjvScene sensor_scene;
     mjrContext sensor_context;
 
-    mjvCamera rgbd_camera;
+    mjvCamera rgbd_camera; // link to the camera setted in xml file.
     rgbd_camera.type = mjCAMERA_FIXED;
     rgbd_camera.fixedcamid = mj_name2id(model, mjOBJ_CAMERA, "camera");
 
@@ -466,7 +489,6 @@ void second_view(mjModel *model, mjData *data, int argc, const char **argv)
     mjv_makeScene(model, &sensor_scene, 1000);
     mjr_makeContext(model, &sensor_context, mjFONTSCALE_150);
 
-    //   RGBD_mujoco mj_RGBD;
     // get framebuffer viewport
     mjrRect viewport = mjr_maxViewport(&con);
     int W = viewport.width;
@@ -476,18 +498,27 @@ void second_view(mjModel *model, mjData *data, int argc, const char **argv)
     int total = viewport.width * viewport.height;
     std::unique_ptr<float[]> depth(new float[total]);
     std::unique_ptr<unsigned char[]> rgbBuffer(new unsigned char[total * 3]);
+    std::unique_ptr<unsigned char[]> depth8(new unsigned char[3 * viewport.width * viewport.height]);
 
     double duration = 10, fps = 30;
     std::sscanf(argv[3], "%lf", &fps);
     // create output rgb file
-    std::FILE *fp = std::fopen(argv[4], "wb");
-    if (!fp)
+    std::FILE *fp_rgb = std::fopen(argv[4], "wb"); // file for rgb image
+    if (!fp_rgb)
     {
-        mju_error("Could not open rgbfile for writing");
+        mju_error("Could not open rgb file for writing");
     }
 
-    double frametime = 0;
-    int framecount = 0;
+    if (!depth_window) // depth window closed, gernate depth image here.
+    {
+        fp_depth = std::fopen(argv[5], "wb"); // file for depth image
+        if (!fp_depth)
+        {
+            mju_error("Could not open deth file for writing");
+        }
+    }
+
+    double frametime = 0; // time of last rendering
     namespace mju = ::mujoco::sample_util;
     while (!glfwWindowShouldClose(window))
     {
@@ -497,6 +528,27 @@ void second_view(mjModel *model, mjData *data, int argc, const char **argv)
             mjv_updateScene(model, data, &sensor_option, NULL, &rgbd_camera, mjCAT_ALL, &sensor_scene);
             mjr_render(viewport, &sensor_scene, &sensor_context);
 
+            if (!depth_window) // depth window closed, gernate depth image here.
+            {
+                // calculat and wirte depth image to file
+                std::cout << "depth image from second view\n";
+                // convert to meters
+                float extent = model->stat.extent;
+                float near = model->vis.map.znear * extent;
+                float far = model->vis.map.zfar * extent;
+                for (int i = 0; i < total; ++i)
+                {
+                    depth[i] = near / (1.0f - depth[i] * (1.0f - near / far));
+                }
+                // convert to a 3-channel 8-bit image
+                mjr_readPixels(nullptr, depth.get(), viewport, &sensor_context);
+                for (int i = 0; i < viewport.width * viewport.height; i++)
+                {
+                    depth8[3 * i] = depth8[3 * i + 1] = depth8[3 * i + 2] = depth[i] * 255;
+                }
+                std::fwrite(depth8.get(), 3, W * H, fp_depth);
+            }
+
             // add time stamp in upper-left corner
             char stamp[50];
             mju::sprintf_arr(stamp, "Time = %.3f", d->time);
@@ -505,7 +557,7 @@ void second_view(mjModel *model, mjData *data, int argc, const char **argv)
             mjr_readPixels(rgbBuffer.get(), nullptr, viewport, &sensor_context);
 
             // write rgb image to file
-            std::fwrite(rgbBuffer.get(), 3, W * H, fp);
+            std::fwrite(rgbBuffer.get(), 3, W * H, fp_rgb);
 
             mjr_drawPixels(rgbBuffer.get(), nullptr, viewport, &sensor_context);
 
@@ -522,11 +574,22 @@ void second_view(mjModel *model, mjData *data, int argc, const char **argv)
 // main function
 int main(int argc, const char **argv)
 {
+    // std::cout <<argv[8] << "  " << argv[9] <<"\n" ;
+    std::cout << argc << "\n";
+    bool depth_window = false;
     // check command-line arguments
-    if (argc = 0)
+    if (argc >= 8)
+    {
+        std::string arg(argv[8]);
+        if (arg == "true" || arg == "1")
+        {
+            depth_window = true;
+        }
+    }
+
+    if (argc == 0)
     {
         printf(" No arguments passed. Loading model...\n");
-        // return 0;
     }
 
     // load and compile model
@@ -546,6 +609,7 @@ int main(int argc, const char **argv)
 
     if (!m)
         mju_error_s("Load model error: %s", error);
+    // depth_window = (argc > 8) ? std::atoi(argv[8]) : depth_window;
 
     // make data
     d = mj_makeData(m);
@@ -555,13 +619,21 @@ int main(int argc, const char **argv)
         mju_error("Could not initialize GLFW");
     // calling thread form simulaiton and depth camera
     std::thread simulation_thread(simulation, m, d, argc, argv);
-    std::thread view_thread(second_view, m, d, argc, argv);
-    std::thread depth_thread(depth_show, m, d, argc, argv);
+    std::thread view_thread(second_view, m, d, argc, argv, depth_window);
+    std::thread depth_thread;
     // std::thread offscreen_thread(offscreen_rgb, m, d,argc, argv);
-
+    if (depth_window)
+    {
+        std::cout << "main depth";
+        depth_thread = std::thread(depth_show, m, d, argc, argv, depth_window);
+    }
     simulation_thread.join();
     view_thread.join();
-    depth_thread.join();
+    if (depth_thread.joinable())
+    {
+        depth_thread.join();
+    }
+
     // offscreen_thread.join();
 
     // free MuJoCo model and data, deactivate
