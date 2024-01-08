@@ -26,8 +26,9 @@
 #include <vector>
 #include <GLFW/glfw3.h>
 
-#include <mujoco/mujoco.h>
-#include "glfw_adapter.h"
+// #include <mujoco/mujoco.h>
+#include <GLFW/glfw3.h>
+// #include "glfw_adapter.h"
 #include "simulate.h"
 #include "array_safety.h"
 #include "tool_kits.h"

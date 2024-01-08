@@ -11,8 +11,8 @@
 #include <string>
 #include "tool_kits.h"
 // #include "ui.cpp"
-#include "include/data_handler.h"
-#include "include/array_safety.h"
+#include "data_handler.h"
+#include "array_safety.h"
 #include "ControlSystem.h"
 
 #define PI 3.14159265358979323846
@@ -559,13 +559,13 @@ int main(int argc, const char **argv)
         mju_error("Could not initialize GLFW");
     // calling thread form simulaiton and depth camera
     std::thread simulation_thread(simulation, m, d, argc, argv);
-    // std::thread view_thread(second_view, m, d,argc, argv);
-    // std::thread depth_thread(depth_show, m, d,argc, argv);
+    std::thread view_thread(second_view, m, d,argc, argv);
+    std::thread depth_thread(depth_show, m, d,argc, argv);
     // std::thread offscreen_thread(offscreen_rgb, m, d,argc, argv);
 
     simulation_thread.join();
-    // view_thread.join();
-    // depth_thread.join();
+    view_thread.join();
+    depth_thread.join();
     // offscreen_thread.join();
 
     // free MuJoCo model and data, deactivate

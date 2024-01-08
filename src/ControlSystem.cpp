@@ -18,7 +18,7 @@
   considered to be at the desired position.
   @param n_joints - Extracts and stores the number of actuator (control) inputs in the model.
 */
-ControlSystem::ControlSystem(const mjModel *model) : m(model), kp(0.006f), threshold(0.01)
+ControlSystem::ControlSystem(const mjModel *model) : m(model), kp(0.005f), threshold(0.01)
 {
     n_joints = m->nu;
 }

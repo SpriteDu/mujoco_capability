@@ -1,10 +1,9 @@
 #ifndef CONTROLSYSTEM_H
 #define CONTROLSYSTEM_H
 
-#include <mujoco/mujoco.h> // Assuming mujoco.h is the header for mjModel and mjData
+#include <mujoco/mujoco.h>  // Assuming mujoco.h is the header for mjModel and mjData
 
-class ControlSystem
-{
+class ControlSystem {
 public:
     ControlSystem(const mjModel *model);
     int update(mjData *d, double ref[], int stage);
