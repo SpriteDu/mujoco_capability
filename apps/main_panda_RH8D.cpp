@@ -104,36 +104,6 @@ void scroll(GLFWwindow *window, double xoffset, double yoffset)
     mjv_moveCamera(m, mjMOUSE_ZOOM, 0, -0.05 * yoffset, &scn, &cam);
 }
 
-void pcontroller(const mjModel *m, mjData *d)
-{
-    //   cout << m->nu << m->nv <<endl;
-    //   if( m->nu==m->nv )
-    //   std::cout << "equal"<<endl;
-    double ref[] = {0.470887, 0.978366, 2.6895, -2.15875, 2.75034, 1.88727, 0.707};
-    // only one position due to the constriant from callback
-    // d->ctrl[0] = -10*(d->qpos[0]-0)-1*d->qvel[0];
-
-    int n_joints = m->nu;
-    float kp = 0.003f;
-    float kv = 0.01f;
-    double err = 0.0;
-    for (int i = 0; i < n_joints; i++)
-    {
-        err = ref[i] - d->qpos[i];
-        d->ctrl[i] = d->ctrl[i] + kp * (err)-kv * d->qvel[i];
-    }
-}
-
-void printSensorData(const mjModel *m, mjData *d, bool posvel)
-{
-    if (posvel)
-        for (int i = 0; i < 5; i++)
-            std::cout << d->sensordata[i * 6] << d->sensordata[i * 6 + 1] << d->sensordata[i * 6 + 2] << std::endl;
-    else
-        for (int i = 0; i < 5; i++)
-            std::cout << d->sensordata[i * 6 + 3] << d->sensordata[i * 6 + 4] << d->sensordata[i * 6 + 5] << std::endl;
-}
-
 void simulation(mjModel *model, mjData *data, int argc, const char **argv)
 {
     ControlSystem controlSystem(model);
@@ -154,8 +124,9 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
     // create scene and context
     mjv_makeScene(model, &scn, 2000);
     mjr_makeContext(model, &con, mjFONTSCALE_150);
-
-    double arr_view[] = {86.68, -9.65863, 2.54165, 0.171193, 0.0378619, 0.61732};
+    
+    //position of default free camera.
+    double arr_view[] = {86.68, -9.65863, 2.54165, 0.171193, 0.0378619, 0.61732}; 
     cam.azimuth = arr_view[0];
     cam.elevation = arr_view[1];
     cam.distance = arr_view[2];
@@ -578,7 +549,7 @@ int main(int argc, const char **argv)
     std::cout << argc << "\n";
     bool depth_window = false;
     // check command-line arguments
-    if (argc >= 8)
+    if (argc > 8)
     {
         std::string arg(argv[8]);
         if (arg == "true" || arg == "1")
