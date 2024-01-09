@@ -10,14 +10,13 @@
 #include <random>
 #include <string>
 #include "tool_kits.h"
-// #include "ui.cpp"
 #include "data_handler.h"
 #include "array_safety.h"
 #include "ControlSystem.h"
 
 #define PI 3.14159265358979323846
 
-using namespace std;
+// using namespace std;
 using Eigen::MatrixXd;
 
 // MuJoCo data structures
@@ -124,9 +123,9 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
     // create scene and context
     mjv_makeScene(model, &scn, 2000);
     mjr_makeContext(model, &con, mjFONTSCALE_150);
-    
-    //position of default free camera.
-    double arr_view[] = {86.68, -9.65863, 2.54165, 0.171193, 0.0378619, 0.61732}; 
+
+    // position of default free camera.
+    double arr_view[] = {86.68, -9.65863, 2.54165, 0.171193, 0.0378619, 0.61732};
     cam.azimuth = arr_view[0];
     cam.elevation = arr_view[1];
     cam.distance = arr_view[2];
@@ -215,6 +214,7 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
     // run main loop, target real-time simulation and 60 fps rendering
     double fps = 60.0;
     std::sscanf(argv[3], "%lf", &fps);
+    // std::cout << fps <<"\n" ;
 
     // get framebuffer viewport
     mjrRect viewport = mjr_maxViewport(&con);
@@ -225,13 +225,12 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
     double normal_dt = 1.0 / fps;                     //
     double dt = normal_dt / desired_real_time_factor; // 60 Hz for control system and rendering
     // m->opt.timestep = dt;  // the integral time in each step. should align with the step size defined earlier.
-    cout << "the intergal time is " << model->opt.timestep << endl;
+    std::cout << "the intergal time is " << model->opt.timestep << std::endl;
 
     // for P controller the calling frequency influence the controled behavior
     double controlSystem_dt = 1.0 / 100.0;
     double lastControlUpdateTime = 0.0;
     // mjcb_control = pcontroller;
-    mjtNum start_time = data->time;
 
     DataHandler datahandler;
     datahandler.openData();
@@ -248,6 +247,7 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
     const int tableID = mj_name2id(m, mjOBJ_BODY, tableName);
     int table_ncon{0};
 
+    mjtNum start_time = data->time;
     while (!glfwWindowShouldClose(window))
     {
 
@@ -285,20 +285,26 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
 
         // mjtNum elapsed_time = data->time - start_time;//set after the while loop to decrease the influence from.
         // steady the calling frequency of controllSystem.
-        // if (elapsed_time - lastControlUpdateTime >= controlSystem_dt){
-
+        // if (elapsed_time - lastControlUpdateTime >= controlSystem_dt)
+        // {
         stage = controlSystem.update(data, ref, stage);
-
-        // update scene and render
-        mjv_updateScene(model, data, &opt, NULL, &cam, mjCAT_ALL, &scn);
-        mjr_render(viewport, &scn, &con);
-
-        // swap OpenGL buffers (blocking call due to v-sync)
-        glfwSwapBuffers(window);
-
-        // process pending GUI events, call GLFW callbacks
-        glfwPollEvents();
         // }
+
+        if (data->time - lastControlUpdateTime >= dt ||lastControlUpdateTime ==0 )
+
+        {
+            std::cout << data->time << "\n";
+            // update scene and render
+            mjv_updateScene(model, data, &opt, NULL, &cam, mjCAT_ALL, &scn);
+            mjr_render(viewport, &scn, &con);
+
+            // swap OpenGL buffers (blocking call due to v-sync)
+            glfwSwapBuffers(window);
+
+            // process pending GUI events, call GLFW callbacks
+            glfwPollEvents();
+            lastControlUpdateTime = data->time;
+        }
 
     } // end simulation
 
