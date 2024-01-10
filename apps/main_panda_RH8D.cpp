@@ -104,7 +104,8 @@ void scroll(GLFWwindow *window, double xoffset, double yoffset)
 }
 
 void simulation(mjModel *model, mjData *data, int argc, const char **argv)
-{
+{   
+    std::string fileName = "New_Record"; // Default file name.
     ControlSystem controlSystem(model);
     // create window, make OpenGL context current, request v-sync
     GLFWwindow *window = glfwCreateWindow(1400, 900, "Robo arm hand simulation", NULL, NULL);
@@ -212,9 +213,11 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
         ref[i] = ik_sol.q_sol[i];
 
     // run main loop, target real-time simulation and 60 fps rendering
-    double fps = 60.0;
-    std::sscanf(argv[3], "%lf", &fps);
-    // std::cout << fps <<"\n" ;
+    double fps = 30.0;
+    if (argc > 9) // get fps input
+    {
+        std::sscanf(argv[9], "%lf", &fps);
+    }
 
     // get framebuffer viewport
     mjrRect viewport = mjr_maxViewport(&con);
@@ -224,50 +227,45 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
     double desired_real_time_factor = 1.0;            // Adjust this factor as needed
     double normal_dt = 1.0 / fps;                     //
     double dt = normal_dt / desired_real_time_factor; // 60 Hz for control system and rendering
-    // m->opt.timestep = dt;  // the integral time in each step. should align with the step size defined earlier.
-    std::cout << "the intergal time is " << model->opt.timestep << std::endl;
 
-    // for P controller the calling frequency influence the controled behavior
-    double controlSystem_dt = 1.0 / 100.0;
-    double lastControlUpdateTime = 0.0;
-    // mjcb_control = pcontroller;
+    double controlSystem_dt = 1.0 / 100.0; // 100hz control system frequency
+    double lastRenderingTime = 0.0;
+    if (argc > 3) {
+        fileName = argv[3];
+    }
 
-    DataHandler datahandler;
+    DataHandler datahandler(fileName);
     datahandler.openData();
 
     const char *objectName = "Multi_shaped_object";
     int objectID = mj_name2id(m, mjOBJ_BODY, objectName);
-    mjtNum tip_index_force[6];
+    mjtNum tip_index_force[6]; // Array to store recorded force and torque values
     int tip_index_ncon{0};
     int object_ncon{0};
     int bodyID{-1};
     int fingerID{-1};
-
     const char *tableName = "Table";
     const int tableID = mj_name2id(m, mjOBJ_BODY, tableName);
-    int table_ncon{0};
 
-    mjtNum start_time = data->time;
     while (!glfwWindowShouldClose(window))
     {
 
-        mjtNum simstart = data->time;
-
+        mjtNum simstart = data->time; // time stemp for
         // while last step is finished and a frame is rendered,, keep do the simulation without re-rendering.
         while (data->time - simstart < controlSystem_dt)
         {
             mj_step(model, data);
         }
 
-        // get contact force
+        // get contact force after simulation.
         for (int i = 0; i < d->ncon; i++) // loop over all contacts.
         {
             int body1 = m->geom_bodyid[d->contact[i].geom1];
             int body2 = m->geom_bodyid[d->contact[i].geom2];
 
-            if (body1 == objectID || body2 == objectID)
+            if (body1 == objectID || body2 == objectID) // focus on the object.
             {
-                body1 == objectID ? fingerID = body2 : fingerID = body1; // other objcet that have contact with object.
+                body1 == objectID ? fingerID = body2 : fingerID = body1; // the ID of the contact part and not the object.
 
                 if (fingerID == tableID)
                     break; // not recording the contact force with the table.
@@ -281,19 +279,13 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
                 }
             }
 
-        } // end of for loop, checking every contact force.
+        } // end of for for loop, checked every contact force.
 
-        // mjtNum elapsed_time = data->time - start_time;//set after the while loop to decrease the influence from.
-        // steady the calling frequency of controllSystem.
-        // if (elapsed_time - lastControlUpdateTime >= controlSystem_dt)
-        // {
         stage = controlSystem.update(data, ref, stage);
-        // }
 
-        if (data->time - lastControlUpdateTime >= dt ||lastControlUpdateTime ==0 )
-
+        if (data->time - lastRenderingTime >= dt || lastRenderingTime == 0)
+        // updata main screen with given frequency
         {
-            std::cout << data->time << "\n";
             // update scene and render
             mjv_updateScene(model, data, &opt, NULL, &cam, mjCAT_ALL, &scn);
             mjr_render(viewport, &scn, &con);
@@ -303,7 +295,7 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
 
             // process pending GUI events, call GLFW callbacks
             glfwPollEvents();
-            lastControlUpdateTime = data->time;
+            lastRenderingTime = data->time;
         }
 
     } // end simulation

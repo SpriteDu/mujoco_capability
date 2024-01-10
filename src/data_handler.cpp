@@ -38,7 +38,7 @@ void DataHandler::openData()
     }
     // outputFile << " joint" << std::endl;
 
-    outputFile << "Body Name,Time,normal,tangent1,tangent2,\n";
+    outputFile << "Body Name,Time,normal,tangent1,tangent2\n"; 
 
     outputFile.close();
 }
