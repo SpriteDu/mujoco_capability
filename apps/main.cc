@@ -33,6 +33,7 @@
 #include "array_safety.h"
 #include "tool_kits.h"
 #include "ControlSystem.h"
+#include "data_handler.h"
 
 // mujoco-capability/simulate/main.cc
 
@@ -317,11 +318,16 @@ namespace
   ////////////////////////
 
   // simulate in background thread (while rendering in main thread)
-  void PhysicsLoop(mj::Simulate &sim)
+  void PhysicsLoop(mj::Simulate &sim, const std::string &csvfileName)
   {
     // cpu-sim syncronization point
     std::chrono::time_point<mj::Simulate::Clock> syncCPU;
     mjtNum syncSim = 0;
+
+    const int recordFreq = 100; // recording force after so many time simulation
+    int stepCounter = 0;
+    DataHandler datahandler(csvfileName);
+    datahandler.openData();
 
     // run until asked to exit
     while (!sim.exitrequest.load())
@@ -377,6 +383,45 @@ namespace
         }
       }
 
+      const char *objectName = "Multi_shaped_object";
+      int objectID = mj_name2id(m, mjOBJ_BODY, objectName);
+      mjtNum tip_index_force[6]; // Array to store recorded force and torque values
+      int tip_index_ncon{0};
+      int object_ncon{0};
+      int bodyID{-1};
+      int fingerID{-1};
+      const char *tableName = "Table";
+      const int tableID = mj_name2id(m, mjOBJ_BODY, tableName);
+
+      // get contact force after simulation.
+      if (stepCounter >= recordFreq)
+      {
+        for (int i = 0; i < d->ncon; i++) // loop over all contacts.
+        {
+          int body1 = m->geom_bodyid[d->contact[i].geom1];
+          int body2 = m->geom_bodyid[d->contact[i].geom2];
+
+          if (body1 == objectID || body2 == objectID) // focus on the object.
+          {
+            body1 == objectID ? fingerID = body2 : fingerID = body1; // the ID of the contact part and not the object.
+
+            if (fingerID == tableID)
+              break; // not recording the contact force with the table.
+            else
+            { // recording other contact, perhaps with hand
+              mj_contactForce(m, d, i, tip_index_force);
+              // Extract 6D force:torque given contact id, in the contact frame.
+              tip_index_ncon++;
+              // Write contents to the file, the contact force.
+              datahandler.record_contact(m, d, tip_index_force, fingerID);
+            }
+          }
+
+        } // end of for for loop, checked every contact force.
+        stepCounter = 0;
+      } // end of if
+      stepCounter++;
+
       // sleep for 1 ms or yield, to let main thread run
       //  yield results in busy wait - which has better timing but kills battery life
       if (sim.run && sim.busywait)
@@ -391,7 +436,7 @@ namespace
       {
         // lock the sim mutex
         const std::unique_lock<std::recursive_mutex> lock(sim.mtx);
-        ControlSystem controlSystem(m);// create a control system 
+        ControlSystem controlSystem(m); // create a control system
         // run only if model is present
         if (m)
         {
@@ -489,7 +534,7 @@ namespace
 
 //-------------------------------------- physics_thread --------------------------------------------
 
-void PhysicsThread(mj::Simulate *sim, const char *filename)
+void PhysicsThread(mj::Simulate *sim, const char *filename, const std::string &csvfileName)
 {
   // request loadmodel if file given (otherwise drag-and-drop)
   if (filename != nullptr)
@@ -509,7 +554,7 @@ void PhysicsThread(mj::Simulate *sim, const char *filename)
     }
   }
 
-  PhysicsLoop(*sim);
+  PhysicsLoop(*sim, csvfileName);
 
   // delete everything we allocated
   free(ctrlnoise);
@@ -598,16 +643,24 @@ int main(int argc, const char **argv)
       std::make_unique<mj::GlfwAdapter>(),
       &scn, &cam, &opt, &pert, /* fully_managed = */ true);
 
-  const char *filename = nullptr;
+  const char *modelname = nullptr;
+  modelname = "../models/franka_panda_RH8D_R.xml";
   if (argc > 1)
   {
-    filename = argv[1];
+    modelname = argv[1];
   }
-  
-  filename = "/home/jididu/Documents/mujoco-2.3.7/Project/mujoco-capability/franka_panda_RH8D_R.xml";
+  std::string csvfileName;
+  if (argc > 2)
+  {
+    csvfileName = argv[2];
+  }
+  else
+  {
+    csvfileName = "New_Record";
+  }
 
   // start physics thread
-  std::thread physicsthreadhandle(&PhysicsThread, sim.get(), filename);
+  std::thread physicsthreadhandle(&PhysicsThread, sim.get(), modelname, csvfileName);
 
   // start simulation UI loop (blocking call)
   sim->RenderLoop();

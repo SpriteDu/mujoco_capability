@@ -1,6 +1,27 @@
 
 
+
 <mujocoinclude>
+    <body name="Multi_shaped_object" pos="0.68 -0.19 0.63" euler="0 0 1.67">
+        <joint type = "free" damping = "0.000001"/>
+        <!-- <geom pos="0 0 0" type="mesh" material="brown" mesh="Multi_shaped_object" friction="0.1 0.005 0.0001"/>   -->
+
+        <geom pos="0.07 0.05 0" size = "0.03 0.1 0.4" type = "cylinder" material="black" friction="1 0.00005 0.0001"/> 
+    </body>
+</mujocoinclude>
+
+
+<!-- <mujocoinclude>
+    <body name="Multi_shaped_object" pos="0.69 -0.16 0.63" euler="0 0 1.67">
+        <joint type = "free" damping = "0.000001"/>
+        <!-- <geom pos="0 0 0" type="mesh" material="brown" mesh="Multi_shaped_object" friction="0.1 0.005 0.0001"/>   -->
+
+        <geom pos="0.07 0.05 0" size = "0.03 0.02 0.1" type = "box" material="black" friction="1 0.00005 0.0001"/> 
+    </body>
+</mujocoinclude> -->
+
+
+<!-- <mujocoinclude>
     <body name="Multi_shaped_object" pos="0.66 -0.13 0.63" euler="0 0 1.63">
     <!-- this position will be pushed   -->
     <!-- <body name="Multi_shaped_object" pos="0.69 -0.30 0.63" euler="0 0 1.67">      -->
@@ -10,15 +31,6 @@
         <inertial mass="0.89544" pos = "0.06 0.04 0.11" diaginertia="0.01 0.01 0.0001"/>
         <geom pos="0 0 0" type="mesh" material="brown" mesh="Multi_shaped_object" friction="0.1 0.005 0.0001"/>            
     </body>
-</mujocoinclude>
+</mujocoinclude> -->
 
 
-
-<mujocoinclude>
-    <body name="Multi_shaped_object" pos="0.69 -0.40 0.63" euler="0 0 1.67">
-        <joint type = "free" damping = "0.000001"/>
-        <!-- <geom pos="0 0 0" type="mesh" material="brown" mesh="Multi_shaped_object" friction="0.1 0.005 0.0001"/>   -->
-
-        <geom pos="0.07 0.05 0" size = "0.03 0.02 0.1" type = "box" material="black" friction="1 0.00005 0.0001"/> 
-    </body>
-</mujocoinclude>
