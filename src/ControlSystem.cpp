@@ -18,7 +18,7 @@
   considered to be at the desired position.
   @param n_joints - Extracts and stores the number of actuator (control) inputs in the model.
 */
-ControlSystem::ControlSystem(const mjModel *model) : m(model), kp(0.005f), threshold(0.01)
+ControlSystem::ControlSystem(const mjModel *model) : m(model), kp(0.004f), threshold(0.01)
 {
     n_joints = m->nu;
 }
@@ -52,10 +52,35 @@ int ControlSystem::update(mjData *d, double ref[], int stage)
         }
         break;
     }
+    // case 1:
+    // { // reached the position, grab object with pinch 
+    //     int finger_joint_at_position = 0;
+    //     for (int i = 11; i < 17; i += 1)
+    //     {
+    //         err = 0.9 - d->qpos[i];
+    //         d->ctrl[i] = d->ctrl[i] + kp * err;
+    //         if (std::fabs(err) < 0.02)
+    //         {
+    //             finger_joint_at_position++;
+    //         }
+    //     }
+    //     if (finger_joint_at_position >= 2)
+    //     {
+    //         for (int i = 11; i < 17; i += 3)
+    //         {
+    //             err = 1 - d->qpos[i];
+    //             d->ctrl[i] = 0.9;
+    //         }
+    //         stage = 2;
+    //     }
+    //     break;
+    // }
+
+
     case 1:
-    { // reaches the position, grab object
+    { // reached the position, grab object with power grab
         int finger_joint_at_position = 0;
-        for (int i = 11; i < n_joints; i += 3)
+        for (int i = 11; i < n_joints; i += 1)
         {
             err = 0.9 - d->qpos[i];
             d->ctrl[i] = d->ctrl[i] + kp * err;
@@ -64,9 +89,9 @@ int ControlSystem::update(mjData *d, double ref[], int stage)
                 finger_joint_at_position++;
             }
         }
-        if (finger_joint_at_position >= 2)
+        if (finger_joint_at_position >= 5)
         {
-            for (int i = 11; i < n_joints; i += 3)
+            for (int i = 11; i < n_joints; i += 1)
             {
                 err = 1 - d->qpos[i];
                 d->ctrl[i] = 0.9;
@@ -75,6 +100,9 @@ int ControlSystem::update(mjData *d, double ref[], int stage)
         }
         break;
     }
+
+
+    
     case 2:
     {
         int i = 5;
