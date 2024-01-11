@@ -169,7 +169,7 @@
   </asset>
 
   <default>
-    <geom solimp=".9 .99 .003" solref=".01 1"/>
+    <geom solimp="1.9 1.99 .003" solref=".01 1"/>
     <default class="wall">
       <geom type="plane" material="decoration"/>
     </default>
