@@ -36,7 +36,7 @@ bool button_right = false;
 double lastx = 0;
 double lasty = 0;
 
-char filename[] = "../franka_panda_RH8D_R.xml";
+char modelname[] = "../franka_panda_RH8D_R.xml";
 int stage = 0; // flag to for control stage. Gloabl
 // keyboard callback
 void keyboard(GLFWwindow *window, int key, int scancode, int act, int mods)
@@ -105,7 +105,7 @@ void scroll(GLFWwindow *window, double xoffset, double yoffset)
 
 void simulation(mjModel *model, mjData *data, int argc, const char **argv)
 {   
-    std::string fileName = "New_Record"; // Default file name.
+    std::string csvfileName = "New_Record"; // Default file name.
     ControlSystem controlSystem(model);
     // create window, make OpenGL context current, request v-sync
     GLFWwindow *window = glfwCreateWindow(1400, 900, "Robo arm hand simulation", NULL, NULL);
@@ -230,11 +230,11 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
 
     double controlSystem_dt = 1.0 / 100.0; // 100hz control system frequency
     double lastRenderingTime = 0.0;
-    if (argc > 3) {
-        fileName = argv[3];
+    if (argc > 2) {
+        csvfileName = argv[2];
     }
 
-    DataHandler datahandler(fileName);
+    DataHandler datahandler(csvfileName);
     datahandler.openData();
 
     const char *objectName = "Multi_shaped_object";
@@ -566,7 +566,7 @@ int main(int argc, const char **argv)
 
     if (argc < 2)
     {
-        m = mj_loadXML(filename, 0, error, 1000);
+        m = mj_loadXML(modelname, 0, error, 1000);
     }
     else
     {
