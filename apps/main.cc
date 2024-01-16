@@ -292,7 +292,7 @@ namespace
     return mnew;
   }
   //////////////////
-  double ref[26] = {1.35707, -1.50824, -1.06781, -2.0287, -0.808474, 2.68296, 1.207, // Panda joints
+  double ref[26] = {1.35707, -1.50824, -1.06781, -2.0287, -0.808474, 2.48296, 1.207, // Panda joints
                     0,                                                               // Forearm --> Should be kept in 0 as it is not actuated
                     0,                                                               // Wrist adduction/abduction
                     0.50,                                                            // Wrist Flexion/Extension
@@ -607,36 +607,6 @@ int main(int argc, const char **argv)
 
   mjvPerturb pert;
   mjv_defaultPerturb(&pert);
-
-  // /////////////////////////////////////////////////////////////////////////////////////////////
-  double q7 = 1.207;
-  std::array<double, 16> O_T_EE_array;
-  std::array<double, 7> q_actual_array = {0};
-  for (auto i = 0; i < 7; i++)
-    q_actual_array[i] = d->qpos[i];
-
-  O_T_EE_array[0] = 0;
-  O_T_EE_array[4] = -0.5;
-  O_T_EE_array[8] = 0.867;
-  O_T_EE_array[12] = 0.75;
-  O_T_EE_array[1] = 0;
-  O_T_EE_array[5] = 0.867;
-  O_T_EE_array[9] = 0.5;
-  O_T_EE_array[13] = -0.1;
-  O_T_EE_array[2] = 1;
-  O_T_EE_array[6] = 0;
-  O_T_EE_array[10] = 0;
-  O_T_EE_array[14] = 0.65;
-  O_T_EE_array[3] = 0;
-  O_T_EE_array[7] = 0;
-  O_T_EE_array[11] = 0;
-  O_T_EE_array[15] = 1;
-
-  Ik_solution ik_sol;
-  // ik_sol.define_sol_par(O_T_EE_array, q_actual_array, q7);
-  // ik_sol.get_Solution();
-  // ik_sol.print_sol();
-  // ////////////////////////////////////////////////////////////////////////////////////////////
 
   // simulate object encapsulates the UI
   auto sim = std::make_unique<mj::Simulate>(

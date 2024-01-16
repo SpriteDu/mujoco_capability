@@ -54,7 +54,8 @@
                 <geom mesh="link5_c0" class="collision"/>
                 <geom mesh="link5_c1" class="collision"/>
                 <geom mesh="link5_c2" class="collision"/>
-                <body name="link6" quat="1 1 0 0" gravcomp="1">
+                <body name="link6" euler = "1.57 0 0.2"  gravcomp="1">
+                <!-- quat="1 1 0 0" -->
                   <inertial mass="1.666555" pos="6.0149e-2 -1.4117e-2 -1.0517e-2"
                     fullinertia="1.964e-3 4.354e-3 5.433e-3 1.09e-4 -1.158e-3 3.41e-4"/>
                   <joint name="joint6" range="-0.0175 3.7525"/>

@@ -183,6 +183,7 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
     Ik_solution ik_sol;
     ik_sol.define_sol_par(O_T_EE_array, q_actual_array, q7);
     ik_sol.get_Solution();
+    ik_sol.q_sol[5] -= 0.2; // Due to changes in the initial XML file configuration, compensation is required.
     ik_sol.print_sol();
     /////////////////////////////////////////////////////////////////////////////////////////////
 

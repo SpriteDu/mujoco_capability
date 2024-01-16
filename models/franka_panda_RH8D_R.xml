@@ -29,7 +29,7 @@
     <exclude name = "exclude_forearm_palm" body1="palm" body2="Thumb_Methacarpal" />
     <exclude name = "exclude_palm_forearm" body1="palm" body2="forearm:1"  />
 
-    Thumb_Methacarpal
+    <!-- Thumb_Methacarpal -->
   </contact>
 
   <keyframe>
