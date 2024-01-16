@@ -1,8 +1,11 @@
 <mujocoinclude>
-    <compiler angle="radian" meshdir="assets" autolimits="true"/>
-    <option integrator="implicit"/>
-    <option timestep="0.00015"/>
+    <compiler angle="radian" meshdir="assets" autolimits="true" />
+    <option integrator="implicitfast"/>
+    <option timestep="0.00015" cone="pyramidal"/>
+     <option noslip_iterations="30" noslip_tolerance="1e-8"   impratio = "2"/> 
 
+
+<!-- elliptic  pyramidal  noslip_iterations="30" noslip_tolerance="1e-8" -->
     <option>
       <flag multiccd="enable"/>
     </option>
@@ -166,6 +169,19 @@
   <asset>
     <mesh name="Table" file="Manipulation_scene/Table.stl" scale="0.001 0.001 0.001"/>
     <mesh name="Multi_shaped_object" file="Manipulation_scene/Multi_shaped_object.stl" scale="0.001 0.001 0.001"/>
+  </asset>
+  
+  <!-- Collision meshes for object-->
+  <asset>
+  <mesh name="obj0" file="Manipulation_scene/model0.obj" scale="0.001 0.001 0.001"/>
+  <mesh name="obj1" file="Manipulation_scene/model1.obj" scale="0.001 0.001 0.001"/>
+  <mesh name="obj2" file="Manipulation_scene/model2.obj" scale="0.001 0.001 0.001"/>
+  <mesh name="obj3" file="Manipulation_scene/model3.obj" scale="0.001 0.001 0.001"/>
+  <mesh name="obj4" file="Manipulation_scene/model4.obj" scale="0.001 0.001 0.001"/>
+  <mesh name="obj5" file="Manipulation_scene/model5.obj" scale="0.001 0.001 0.001"/>
+  <mesh name="obj6" file="Manipulation_scene/model6.obj" scale="0.001 0.001 0.001"/>
+  <mesh name="obj7" file="Manipulation_scene/model7.obj" scale="0.001 0.001 0.001"/>
+  <!-- <mesh name="obj0" file="Manipulation_scene/Table.stl" scale="0.001 0.001 0.001"/> -->
   </asset>
 
   <default>
