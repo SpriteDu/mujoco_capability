@@ -35,6 +35,7 @@ set(SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/../src/ControlSystem.cpp
     ${CMAKE_SOURCE_DIR}/../src/tool_kits.cpp
     ${CMAKE_SOURCE_DIR}/../include/franka_ik_He.hpp
+    ${CMAKE_SOURCE_DIR}/../src/data_handler.cpp
     # ${CMAKE_SOURCE_DIR}/include/franka_ik_He.
 )
 
