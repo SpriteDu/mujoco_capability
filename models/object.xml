@@ -26,14 +26,14 @@
         <geom pos="0 0 0" type="mesh" material="brown" mesh="Multi_shaped_object" contype="0" conaffinity="0" friction="0.1 0.005 0.0001"/>  
         
         
-        <geom  type="mesh" material="brown" mesh="obj0" /> 
         <geom  type="mesh" material="brown" mesh="obj1" />  
         <geom  type="mesh" material="brown" mesh="obj2" /> 
         <geom  type="mesh" material="brown" mesh="obj3" /> 
         <geom  type="mesh" material="brown" mesh="obj4" /> 
         <geom  type="mesh" material="brown" mesh="obj5" /> 
         <geom  type="mesh" material="brown" mesh="obj6" /> 
-        <geom  type="mesh" material="brown" mesh="obj7" /> 
+        <geom  type="mesh" material="brown" mesh="obj7" />
+        <geom  type="mesh" material="brown" mesh="obj8" /> 
         <geom  type="box" size="0.08 0.04 0.013" pos = "0.08 0.04 0.01" material="brown"/>
        
         <!-- <geom class ="object"   euler = "0 0 0"/> 

@@ -173,14 +173,14 @@
   
   <!-- Collision meshes for object-->
   <asset>
-  <mesh name="obj0" file="Manipulation_scene/model0.obj" scale="0.001 0.001 0.001"/>
-  <mesh name="obj1" file="Manipulation_scene/model1.obj" scale="0.001 0.001 0.001"/>
-  <mesh name="obj2" file="Manipulation_scene/model2.obj" scale="0.001 0.001 0.001"/>
-  <mesh name="obj3" file="Manipulation_scene/model3.obj" scale="0.001 0.001 0.001"/>
-  <mesh name="obj4" file="Manipulation_scene/model4.obj" scale="0.001 0.001 0.001"/>
-  <mesh name="obj5" file="Manipulation_scene/model5.obj" scale="0.001 0.001 0.001"/>
-  <mesh name="obj6" file="Manipulation_scene/model6.obj" scale="0.001 0.001 0.001"/>
-  <mesh name="obj7" file="Manipulation_scene/model7.obj" scale="0.001 0.001 0.001"/>
+  <mesh name="obj1" file="Manipulation_scene/object1.obj" scale="0.001 0.001 0.001"/>
+  <mesh name="obj2" file="Manipulation_scene/object2.obj" scale="0.001 0.001 0.001"/>
+  <mesh name="obj3" file="Manipulation_scene/object3.obj" scale="0.001 0.001 0.001"/>
+  <mesh name="obj4" file="Manipulation_scene/object4.obj" scale="0.001 0.001 0.001"/>
+  <mesh name="obj5" file="Manipulation_scene/object5.obj" scale="0.001 0.001 0.001"/>
+  <mesh name="obj6" file="Manipulation_scene/object6.obj" scale="0.001 0.001 0.001"/>
+  <mesh name="obj7" file="Manipulation_scene/object7.obj" scale="0.001 0.001 0.001"/>
+  <mesh name="obj8" file="Manipulation_scene/object8.obj" scale="0.001 0.001 0.001"/>
   <!-- <mesh name="obj0" file="Manipulation_scene/Table.stl" scale="0.001 0.001 0.001"/> -->
   </asset>
 
