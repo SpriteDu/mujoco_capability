@@ -123,10 +123,9 @@
                                     <body name="Thumb_Distal" pos="-6.23674e-05 6.16563e-07 -0.0215858">
                                       <inertial pos="0.00560256 -0.00262057 -0.0121248" quat="0.634633 -0.0915234 0.0968285 0.761242" mass="0.00650951" diaginertia="5.45458e-07 5.01126e-07 3.14326e-07"/>
                                       <joint name="Thumb_Distal--Thumb_Proximal" pos="0 0 0" axis="-1 0 0" range="0 1.5708" damping="0.1"/>
-                                      <!-- <geom pos="0.00506251 -1.31623e-07 0" type="mesh" material="black" mesh="tip"/> -->
+                                      <geom pos="0.00506251 -1.31623e-07 0" type="mesh" material="black" mesh="tip"/>
                                       <!-- simple geom for the hand -->
-                                      <geom pos="0.00506253 0 -0.01" size = "0.008 0.005 0.005" type = "capsule" material="black" /> 
-                                      <!-- <geom pos="0.00506253 0 -0.01" size = "0.01" type = "sphere" material="black" />  -->
+                                      <!-- <geom pos="0.00506253 0 -0.01" size = "0.008 0.005 0.005" type = "capsule" material="black" />  -->
                                       <site name = "tip_thumb" pos = "0.005 -0.008 -0.017" size = "0.0001 0.005 0.005" type = "capsule"/>
                                       
                                     </body>

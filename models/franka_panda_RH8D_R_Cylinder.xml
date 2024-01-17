@@ -16,24 +16,27 @@
     <geom name="wall_nx" class="wall" pos="15.7 0 .7" zaxis="-1 0 1"  size="1 15 .5"/>
     <geom name="wall_ny" class="wall" pos="0 15.7 .7" zaxis="0 -1 1"  size="15 1 .5"/>      
     <light name="top" pos="0 0 2" mode="trackcom"/>
-    <!--<site name="target" type="cylinder" size=".4 .06" pos="0 0 .05" material="target"/>-->
     <geom name="terrain" type="hfield" hfield="terrain" rgba=".2 .3 .4 1" pos="0 0 -.01"/>
         <include file="kinematic_chain_panda_rhand.xml"/>
         <include file="table.xml"/>
-        <include file="object.xml"/>
+        <include file="Cylinder.xml"/>
         <include file="camera.xml"/>
   </worldbody>  
 
   <contact>
     <exclude name = "exclude_forearm_palm" body1="palm" body2="Thumb_Methacarpal" />
     <exclude name = "exclude_palm_forearm" body1="palm" body2="forearm:1"  />
-
   </contact>
 
+  <keyframe>
+    <!-- <key name="home" qpos="0 0 0 -1.57079 0 1.57079 -0.7853 0.04 0.04" ctrl="0 0 0 -1.57079 0 1.57079 -0.7853 255"/> -->
+    <!--<key name="home" qpos="-2.5038 -0.41 1.34734 -0.860236 0.555381 0.843954 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0" ctrl="0 0 0 -1.57079 0 1.57079 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/>-->
+    <!-- <key name="home" qpos="0 0 0 0 0 0.85 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0" ctrl="0 0 0 0 0 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/> -->
+  </keyframe>
 
   <include file="actuators.xml"/>
   <include file="sensors.xml"/>
-
+    <!--<include file='assets/actuator_panda_RH8DR.xml'/>-->
 
 </mujoco>
 
