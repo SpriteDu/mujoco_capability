@@ -37,9 +37,9 @@ for i in range(1, 4):
 
         axs[i-1].plot(time_values, force_values, label=f'{source} - Force {i}')
 
-    axs[i-1].set_title(f'Force {i} vs Time for Multiple Sources')
-    axs[i-1].set_xlabel('Time')
-    axs[i-1].set_ylabel(f'Force {i}')
+    axs[i-1].set_title(f'Force {i} - Time for Multiple Sources')
+    axs[i-1].set_xlabel('Time(s)')
+    axs[i-1].set_ylabel(f'Force {i}(N)')
     axs[i-1].legend()
 plt.show()
 
