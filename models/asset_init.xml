@@ -1,6 +1,6 @@
 <mujocoinclude>
     <compiler angle="radian" meshdir="assets" autolimits="true" />
-    <option integrator="implicitfast"/>
+    <option integrator="implicitfast" solver = "Newton"/>
     <option timestep="0.00015" cone="pyramidal"/>
      <option noslip_iterations="30" noslip_tolerance="1e-8"   impratio = "2"/> 
 
