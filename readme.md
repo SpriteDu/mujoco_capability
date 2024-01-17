@@ -39,7 +39,7 @@ Build and use RecordPro
 ```bash
 cd ../build/
 make RecordPro
-./RecordPro ../models/franka_panda_RH8D_R_Prism.xml 20 New_Record rgb.out depth.out 300 300 true 40
+./RecordPro ../models/franka_panda_RH8D_R_Prism.xml New_Record 20 rgb.out depth.out 300 300 true 40
 ffmpeg -f rawvideo -pixel_format rgb24 -video_size 300x300   -framerate 20 -i rgb.out -vf "vflip" rgb.mp4
 ffmpeg -f rawvideo -pixel_format rgb24 -video_size 300x300   -framerate 20 -i depth.out -vf "vflip" depth.mp4
 ```
