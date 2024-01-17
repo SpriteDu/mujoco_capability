@@ -43,7 +43,7 @@ make RecordPro
 ffmpeg -f rawvideo -pixel_format rgb24 -video_size 300x300   -framerate 20 -i rgb.out -vf "vflip" rgb.mp4
 ffmpeg -f rawvideo -pixel_format rgb24 -video_size 300x300   -framerate 20 -i depth.out -vf "vflip" depth.mp4
 ```
-
+[Video tutorial](https://youtu.be/Yup3qeLkkk0)
 
 
 
