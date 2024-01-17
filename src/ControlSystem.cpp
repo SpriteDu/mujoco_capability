@@ -52,6 +52,7 @@ int ControlSystem::update(mjData *d, double ref[], int stage)
         }
         break;
     }
+
     // case 1:
     // { // reached the position, grab object with pinch 
     //     int finger_joint_at_position = 0;
@@ -75,14 +76,14 @@ int ControlSystem::update(mjData *d, double ref[], int stage)
     //     }
     //     break;
     // }
+    
 
-
-    case 1:
+    case 1: //power grab
     { // reached the position, grab object with power grab
         int finger_joint_at_position = 0;
         for (int i = 11; i < n_joints; i += 1)
         {
-            err = 0.9 - d->qpos[i];
+            err = 0.6 - d->qpos[i];
             d->ctrl[i] = d->ctrl[i] + kp * err;
             if (std::fabs(err) < 0.02)
             {
@@ -102,6 +103,34 @@ int ControlSystem::update(mjData *d, double ref[], int stage)
     }
 
 
+    // case 1: //stright finger
+    // { // reached the position, grab object with 
+    //     int finger_joint_at_position = 0;
+    //     for (int i = 11; i < n_joints; i += 3)
+    //     {
+    //         err = 1.05 - d->qpos[i];
+    //         d->ctrl[i] = d->ctrl[i] + kp * err;
+    //         if (std::fabs(err) < 0.02)
+    //         {
+    //             finger_joint_at_position++;
+    //         }
+    //     }
+    //     if (finger_joint_at_position >= 2)
+    //     {
+    //         for (int i = 11; i < n_joints; i += 3)
+    //         {
+    //             err = 1.3 - d->qpos[i];
+    //             d->ctrl[i] = 0.9;
+    //         }
+    //         stage = 2;
+    //     }
+    //     break;
+    // }
+
+
+
+
+
     
     case 2:
     {
@@ -109,7 +138,7 @@ int ControlSystem::update(mjData *d, double ref[], int stage)
         err = 3 - d->qpos[i];
         d->ctrl[i] = d->ctrl[i] + kp * err;
         err = 3 - d->qpos[6];
-        d->qpos[6] = d->ctrl[6] + kp * 0.01 * err;
+        d->qpos[6] = d->ctrl[6] + kp * 0.005 * err;
         break;
     }
     default:
