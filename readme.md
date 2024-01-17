@@ -18,7 +18,7 @@ This framework provides a suite of functionalities for interacting with the MuJo
 ### Installing
 
 Clone the repository to your local machine:
-Insted the Folder of mujoco-2.3.7 
+Inside the Folder of mujoco-2.3.7 
 ```bash
 mkdir Project
 cd Project
