@@ -1,2 +1,0 @@
-/usr/bin/ar qc libtools_and_panda_ik.a  CMakeFiles/tools_and_panda_ik.dir/include/tool_kits.cpp.o
-/usr/bin/ranlib libtools_and_panda_ik.a
