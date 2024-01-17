@@ -48,15 +48,15 @@ add_library(tools_and_panda_ik
 # target_link_libraries(${PROJECT_NAME} PRIVATE tools_and_panda_ik)
 
 # Executable for mujoco_control
-add_executable(${PROJECT_NAME} ../apps/main.cc ${SOURCE_FILES})
+add_executable(IntereactionPro ../apps/main.cc ${SOURCE_FILES})
 
-add_executable(mujoco_control2 ../apps/main_panda_RH8D.cpp ../src/data_handler.cpp ../src/controller.cpp ../src/ControlSystem.cpp)
+add_executable(RecordPro ../apps/main_panda_RH8D.cpp ../src/data_handler.cpp ../src/controller.cpp ../src/ControlSystem.cpp)
 
 
 # Linking libraries
-target_link_libraries(mujoco_control PRIVATE mujoco glfw Threads::Threads)
+target_link_libraries(IntereactionPro PRIVATE mujoco glfw Threads::Threads)
 
-target_link_libraries(mujoco_control2 PRIVATE mujoco Eigen3::Eigen Threads::Threads glfw GL m tools_and_panda_ik)
+target_link_libraries(RecordPro PRIVATE mujoco Eigen3::Eigen Threads::Threads glfw GL m tools_and_panda_ik)
 
 # Set the output directory for the executables
 # set_target_properties(mujoco_control  PROPERTIES
