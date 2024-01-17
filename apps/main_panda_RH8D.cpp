@@ -104,7 +104,7 @@ void scroll(GLFWwindow *window, double xoffset, double yoffset)
 }
 
 void simulation(mjModel *model, mjData *data, int argc, const char **argv)
-{   
+{
     std::string csvfileName = "New_Record"; // Default file name.
     ControlSystem controlSystem(model);
     // create window, make OpenGL context current, request v-sync
@@ -231,7 +231,8 @@ void simulation(mjModel *model, mjData *data, int argc, const char **argv)
 
     double controlSystem_dt = 1.0 / 100.0; // 100hz control system frequency
     double lastRenderingTime = 0.0;
-    if (argc > 2) {
+    if (argc > 2)
+    {
         csvfileName = argv[2];
     }
 
@@ -481,6 +482,7 @@ void second_view(mjModel *model, mjData *data, int argc, const char **argv, bool
 
     if (!depth_window) // depth window closed, gernate depth image here.
     {
+        std::cout << "depth image from second view\n";
         fp_depth = std::fopen(argv[5], "wb"); // file for depth image
         if (!fp_depth)
         {
@@ -501,7 +503,7 @@ void second_view(mjModel *model, mjData *data, int argc, const char **argv, bool
             if (!depth_window) // depth window closed, gernate depth image here.
             {
                 // calculat and wirte depth image to file
-                std::cout << "depth image from second view\n";
+
                 // convert to meters
                 float extent = model->stat.extent;
                 float near = model->vis.map.znear * extent;
